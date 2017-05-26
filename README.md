@@ -17,11 +17,14 @@ To get started: Check out `home-assistant.io <https://home-assistant.io>`
     ln -s /home/homeassistant/.homeassistant/OpenMotics/light/openmotics.py light/
 
 Add this to configuration.yaml:
+```
   openmotics:
    username: xxxx
    password: xxxx
    host: xxxx
-   
+```
+
 Host can be local hostname, local ip address, openmotics.local or cloud.openmotics.com
+
 If you're using local hostname or ip, you have to create a local user in the OpenMotics Gateway.
 
