@@ -1,24 +1,25 @@
 """
 Support for OpenMotics Switches.
+
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.openmotics/
 """
 import logging
 
 from homeassistant.components.openmotics import (OM_LOGIN, OM_SWITCHES, OM_OUTPUT_STATUS)
-from homeassistant.const import CONF_NAME
 from homeassistant.components.switch import SwitchDevice
 
-#from var_dump import var_dump
+# from var_dump import var_dump
 
 DEPENDENCIES = ['openmotics']
 
 _LOGGER = logging.getLogger(__name__)
 
-#_VALID_TIMER = [150, 450, 900, 1500, 2220, 3120]
+# _VALID_TIMER = [150, 450, 900, 1500, 2220, 3120]
+
 
 def setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """register connecter outputs"""
+    """Register connecter outputs."""
     switches = []
 
     if discovery_info is None:
@@ -35,6 +36,7 @@ def setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     async_add_devices(switches)
     return True
+
 
 class OpenMoticsSwitch(SwitchDevice):
     """Representation of a OpenMotics switch."""
@@ -55,7 +57,7 @@ class OpenMoticsSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """Return the name of the switch"""
+        """Return the name of the switch."""
         return self._name
 
     @property
@@ -69,25 +71,25 @@ class OpenMoticsSwitch(SwitchDevice):
         return self._state is not None
 
     def turn_on(self, **kwargs):
-        """Turn device on"""
+        """Turn device on."""
         if self.hub.set_output(self._id, True, self._dimmer, self._timer):
             self.hub.update_status()
             self._state = True
 
     def turn_off(self, **kwargs):
-        """Turn devicee off"""
+        """Turn devicee off."""
         if self.hub.set_output(self._id, False, None, None):
             self.hub.update_status()
             self._state = False
 
     def update(self):
-        """Update the state of the switch"""
+        """Update the state of the switch."""
         output_statuses = self._hass.data[OM_OUTPUT_STATUS]
         if not output_statuses:
-           _LOGGER.error('No responce form the controller')
-           return
+            _LOGGER.error('No responce form the controller')
+            return
         for output_status in output_statuses:
-           if output_status['id'] == self._id:
+            if output_status['id'] == self._id:
                 if output_status['dimmer'] is not None:
                     self._dimmer = output_status['dimmer']
                 if output_status['status'] is not None:

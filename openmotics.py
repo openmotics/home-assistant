@@ -44,6 +44,7 @@ DEFAULT_HOST = 'cloud.openmotics.com'
 DEFAULT_PORT = 443
 DEFAULT_VERIFY_HTTPS = False
 
+
 def is_socket_address(value):
     """Validate that value is a valid address."""
     try:
@@ -51,6 +52,7 @@ def is_socket_address(value):
         return value
     except OSError:
         raise vol.Invalid('Device is not a valid domain name or ip address')
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -65,9 +67,10 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+
 @asyncio.coroutine
 def async_setup(hass, config):
-
+    """Set up the OpenMotics components."""
     hass.data[OM_LOGIN] = OpenMoticsHub(hass, config)
     hub = hass.data[OM_LOGIN]
     if hub.get_status() is None:
@@ -81,8 +84,9 @@ def async_setup(hass, config):
             hass, component, DOMAIN, {}, config))
     return True
 
+
 class OpenMoticsHub(Entity):
-    """Thread safe wrapper class for openmotics python sdk"""
+    """Thread safe wrapper class for openmotics python sdk."""
 
     def __init__(self, hass, config):
         """Initialize the openmotics hub."""
@@ -117,68 +121,109 @@ class OpenMoticsHub(Entity):
             return None
 
     def get_modules(self):
+        """Get the OpenMotics Modules."""
         modules = []
         modules = self.my_openmotics.get_modules()
         for key, item in modules.items():
             if key == 'inputs':
                 if item is not None:
-                   _LOGGER.info("found input modules.")
+                    _LOGGER.info("found input modules.")
             if key == 'outputs':
                 if item is not None:
-                  _LOGGER.info("found output modules.")
-                  self._hass.data[OM_SWITCHES] = self.get_outputs(OM_SWITCH_TYPE)
-                  self._hass.data[OM_LIGHTS] = self.get_outputs(OM_LIGHT_TYPE)
+                    _LOGGER.info("found output modules.")
+                    self._hass.data[OM_SWITCHES] = self.get_outputs(OM_SWITCH_TYPE)
+                    self._hass.data[OM_LIGHTS] = self.get_outputs(OM_LIGHT_TYPE)
             if key == 'success':
                 if item is True:
-                   _LOGGER.info("getting modules was successful")
+                    _LOGGER.info("getting modules was successful")
             if key == 'shutters':
                 if item is not None:
-                   _LOGGER.info("found shutters modules.")
+                    _LOGGER.info("found shutters modules.")
         return True
 
     def get_outputs(self, output_type):
+        """Get the outputs."""
         outputs = []
-        output_configs = self.get_output_configurations()
-        if output_configs is None:
-            return None
+        success, output_configs = self.get_output_configurations()
+        if success is False:
+            _LOGGER.error("Error getting output configurations")
+            return outputs
         for output in output_configs['config']:
             if (output['name'] is None or output['name'] == ""):
                 continue
             else:
                 if output['type'] == output_type:
-                   outputs.append(output)
+                    outputs.append(output)
         if not outputs:
             _LOGGER.debug("No outputs found with type %s", output_type)
         return outputs
 
     def get_output_configurations(self):
-        ret = self.my_openmotics.get_output_configurations()
-        return self._parse_output(ret)
+        """Get the output configurations."""
+        try:
+            ret = self.my_openmotics.get_output_configurations()
+            return self._parse_output(ret)
+        except (AuthenticationException,
+                MaintenanceModeException,
+                ApiException) as e:
+            _LOGGER.error(e)
+            return None
 
     #@Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
+        """Update the status op the Openmotics modules."""
         self.update_status()
 
     def update_status(self):
-        output_status = self.get_output_status()
-        self._hass.data[OM_OUTPUT_STATUS] = output_status['status']
-        #thermostat_status = self.get_thermostat_status()
-        #self._hass.data[OM_THERMOSTAT_STATUS] = thermostat_status['status']
-        _LOGGER.info("OpenMotics Controller data updated successfully")
+        """Function to force an update of the modules.
+
+        Can be called from within other components and will bypass throttle.
+        """
+        try:
+            success1, output_status = self.get_output_status()
+            if success1 is True:
+                self._hass.data[OM_OUTPUT_STATUS] = output_status['status']
+            success2, thermostat_status = self.get_thermostat_status()
+            if success2 is True:
+                self._hass.data[OM_THERMOSTAT_STATUS] = thermostat_status['status']
+            if success1 and success2:
+                _LOGGER.info("OpenMotics Controller data updated successfully")
+            else:
+                _LOGGER.error("OpenMotics Controller data updated failed")
+        except (AuthenticationException,
+                MaintenanceModeException,
+                ApiException) as e:
+            _LOGGER.error(e)
+            return None
 
     def get_output_status(self):
-        ret = self.my_openmotics.get_output_status()
-        return self._parse_output(ret)
+        """Get the status of all the outputs."""
+        try:
+            ret = self.my_openmotics.get_output_status()
+            return self._parse_output(ret)
+        except (AuthenticationException,
+                MaintenanceModeException,
+                ApiException) as e:
+            _LOGGER.error(e)
+            return None
 
     def get_thermostat_status(self):
-        ret = self.my_openmotics.get_thermostat_status()
-        return self._parse_output(ret)
+        """Get the status of all the thermostats."""
+        try:
+            ret = self.my_openmotics.get_thermostat_status()
+            return self._parse_output(ret)
+        except (AuthenticationException,
+                MaintenanceModeException,
+                ApiException) as e:
+            _LOGGER.error(e)
+            return None
 
     def set_output(self, id, status, dimmer, timer):
+        """Set the status of an output."""
         so = self.my_openmotics.set_output(id, status, dimmer, timer)
         var_dump(so)
         try:
-            if  so['success'] == True:
+            if so['success'] is True:
                 return True
             else:
                 _LOGGER.error("Error setting output id %s to %s", id, status)
@@ -187,17 +232,17 @@ class OpenMoticsHub(Entity):
             return False
 
     def _parse_output(self, dictionary):
+        """Function to parse the json output."""
         data = {}
         try:
             success = dictionary['success']
-            if success == False:
-                _LOGGER.error("Error calling api")
-                return None
+            if success is False:
+                return False, data
             for key, value in dictionary.items():
                 if key == 'success':
                     continue
                 data[key] = value
-            return data
+            return True, data
 
         except KeyError:
-            return None
+            return False, data

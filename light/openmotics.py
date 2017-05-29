@@ -1,23 +1,24 @@
 """
 Support for OpenMotics Switches.
+
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.openmotics/
 """
 import logging
 
 from homeassistant.components.openmotics import (OM_LOGIN, OM_LIGHTS, OM_OUTPUT_STATUS)
-from homeassistant.const import CONF_NAME
 from homeassistant.components.light import (ATTR_BRIGHTNESS,
                                            SUPPORT_BRIGHTNESS, Light)
 
-#from var_dump import var_dump
+# from var_dump import var_dump
 
 DEPENDENCIES = ['openmotics']
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """register connecter outputs"""
+    """Register connecter outputs."""
     lights = []
 
     if discovery_info is None:
@@ -34,6 +35,7 @@ def setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     async_add_devices(lights)
     return True
+
 
 class OpenMoticsLight(Light):
     """Representation of a OpenMotics light."""
@@ -54,7 +56,7 @@ class OpenMoticsLight(Light):
 
     @property
     def name(self):
-        """Return the name of the light"""
+        """Return the name of the light."""
         return self._name
 
     @property
@@ -69,11 +71,11 @@ class OpenMoticsLight(Light):
 
     @property
     def brightness(self):
-        """Return the brightness of this light between 0..100"""
+        """Return the brightness of this light between 0..100."""
         return self._dimmer
 
     def turn_on(self, **kwargs):
-        """Turn device on"""
+        """Turn device on."""
         if ATTR_BRIGHTNESS in kwargs:
             self._dimmer = kwargs[ATTR_BRIGHTNESS]
         if self.hub.set_output(self._id, True, self._dimmer, self._timer):
@@ -81,19 +83,19 @@ class OpenMoticsLight(Light):
             self._state = True
 
     def turn_off(self, **kwargs):
-        """Turn devicee off"""
+        """Turn devicee off."""
         if self.hub.set_output(self._id, False, None, None):
             self.hub.update_status()
             self._state = False
 
     def update(self):
-        """Update the state of the light"""
+        """Update the state of the light."""
         output_statuses = self._hass.data[OM_OUTPUT_STATUS]
         if not output_statuses:
-           _LOGGER.error('No responce form the controller')
-           return
+            _LOGGER.error('No responce form the controller')
+            return
         for output_status in output_statuses:
-           if output_status['id'] == self._id:
+            if output_status['id'] == self._id:
                 if output_status['dimmer'] is not None:
                     self._dimmer = output_status['dimmer']
                 if output_status['ctimer'] is not None:
