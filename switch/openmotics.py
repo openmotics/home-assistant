@@ -6,7 +6,8 @@ https://home-assistant.io/components/switch.openmotics/
 """
 import logging
 
-from homeassistant.components.openmotics import (OM_LOGIN, OM_SWITCHES, OM_OUTPUT_STATUS)
+#from homeassistant.components.openmotics import (OM_LOGIN, OM_SWITCHES, OM_OUTPUT_STATUS)
+from custom_components.openmotics import (OM_LOGIN, OM_SWITCHES, OM_OUTPUT_STATUS)
 from homeassistant.components.switch import SwitchDevice
 
 # from var_dump import var_dump
