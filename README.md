@@ -4,18 +4,14 @@ Home Assistant OpenMotics plugin
 Home Assistant is a home automation platform running on Python 3. It is able to track and control all devices at home and offer a platform for automating control.
 
 To get started: Check out `home-assistant.io <https://home-assistant.io>`
+Clone this repo into custom_components
 
 .. code:: bash
 
     cd /home/home-assistant/.home-assistant
-    mkdir OpenMotics
-    git clone https://github.com/woutercoppens/home-assistant.git OpenMotics
+    mkdir custom_components
+    git clone https://github.com/woutercoppens/home-assistant.git custom_components
     
-    cd /srv/homeassistant/lib/python3.6/site-packages/homeassistant/components/
-    ln -s /home/homeassistant/.homeassistant/OpenMotics/openmotics.py .
-    ln -s /home/homeassistant/.homeassistant/OpenMotics/switch/openmotics.py switch/
-    ln -s /home/homeassistant/.homeassistant/OpenMotics/light/openmotics.py light/
-
 Add this to configuration.yaml:
 ```
   openmotics:
