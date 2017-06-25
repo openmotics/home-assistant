@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
-from var_dump import var_dump
+#from var_dump import var_dump
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
