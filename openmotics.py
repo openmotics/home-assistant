@@ -221,7 +221,7 @@ class OpenMoticsHub(Entity):
     def set_output(self, id, status, dimmer, timer):
         """Set the status of an output."""
         so = self.my_openmotics.set_output(id, status, dimmer, timer)
-        var_dump(so)
+        #var_dump(so)
         try:
             if so['success'] is True:
                 return True
