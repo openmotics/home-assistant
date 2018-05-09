@@ -15,8 +15,10 @@ from homeassistant.components.light import (ATTR_BRIGHTNESS,
 
 DEPENDENCIES = ['openmotics']
 
-_LOGGER = logging.getLogger(__name__)
+BRIGHTNESS_SCALE_UP     = 2.55
+BRIGHTNESS_SCALE_DOWN   = 0.3925
 
+_LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Register connecter outputs."""
@@ -37,7 +39,6 @@ def setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices(lights)
     return True
 
-
 class OpenMoticsLight(Light):
     """Representation of a OpenMotics light."""
 
@@ -49,12 +50,22 @@ class OpenMoticsLight(Light):
         self._name = light['name']
         self._floor = light['floor']
         self._room = light['room']
+        self._module_type = light['module_type']
         self._timer = None
         self._dimmer = None
         self._state = None
 
         self.update()
 
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        """Check if the light's module is a Dimmer, return brightness as a supported feature."""
+        if self._module_type == 'D':
+            return SUPPORT_BRIGHTNESS
+        else:
+            return 0
+        
     @property
     def name(self):
         """Return the name of the light."""
@@ -73,12 +84,14 @@ class OpenMoticsLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..100."""
-        return self._dimmer
+        brightness = int(self._dimmer * BRIGHTNESS_SCALE_UP)
+        return brightness
 
     def turn_on(self, **kwargs):
         """Turn device on."""
         if ATTR_BRIGHTNESS in kwargs:
-            self._dimmer = kwargs[ATTR_BRIGHTNESS]
+            brightness = int(kwargs[ATTR_BRIGHTNESS] * BRIGHTNESS_SCALE_DOWN)
+            self._dimmer = brightness
         if self.hub.set_output(self._id, True, self._dimmer, self._timer):
             self.hub.update_status()
             self._state = True
@@ -108,3 +121,4 @@ class OpenMoticsLight(Light):
                         self._state = False
                 else:
                     self._state = None
+

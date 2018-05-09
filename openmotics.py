@@ -30,6 +30,7 @@ DOMAIN = 'openmotics'
 OM_LOGIN = 'openmotics_login'
 OM_LIGHTS = 'openmotics_lights'
 OM_SWITCHES = 'openmotics_switches'
+OM_SCENES = 'openmotics_scenes'
 OM_OUTPUT_STATUS = 'openmotics_output_status'
 OM_THERMOSTAT_STATUS = 'openmotics_thermostat_status'
 
@@ -77,9 +78,10 @@ def async_setup(hass, config):
         return False
     _LOGGER.info("Scanning for openmotics modules.")
     hub.get_modules()
+    hub.get_scenes()
     hub.update()
     ''' inputs, output, shutters '''
-    for component in ('switch', 'light'):
+    for component in ('switch', 'light', 'scene'):
         hass.async_add_job(async_load_platform(
             hass, component, DOMAIN, {}, config))
     return True
@@ -141,6 +143,11 @@ class OpenMoticsHub(Entity):
                     _LOGGER.info("found shutters modules.")
         return True
 
+    def get_scenes(self):
+        """Get the openmotics group actions ."""
+        _LOGGER.info("found shutters modules.")
+        self._hass.data[OM_SCENES] = self.get_group_actions()
+
     def get_outputs(self, output_type):
         """Get the outputs."""
         outputs = []
@@ -162,6 +169,33 @@ class OpenMoticsHub(Entity):
         """Get the output configurations."""
         try:
             ret = self.my_openmotics.get_output_configurations()
+            return self._parse_output(ret)
+        except (AuthenticationException,
+                MaintenanceModeException,
+                ApiException) as e:
+            _LOGGER.error(e)
+            return None
+    
+    def get_group_actions(self):
+        """Get the outputs."""
+        actions = []
+        success, action_configs = self.get_group_action_configurations()
+        if success is False:
+            _LOGGER.error("Error getting group action configurations")
+            return actions
+        for action in action_configs['config']:
+            if (action['name'] is None or action['name'] == ""):
+                continue
+            else:
+                actions.append(action)
+        if not actions:
+            _LOGGER.debug("No group actions found")
+        return actions
+
+    def get_group_action_configurations(self):
+        """Get the group action configurations."""
+        try:
+            ret = self.my_openmotics.get_group_action_configurations()
             return self._parse_output(ret)
         except (AuthenticationException,
                 MaintenanceModeException,
@@ -227,6 +261,19 @@ class OpenMoticsHub(Entity):
                 return True
             else:
                 _LOGGER.error("Error setting output id %s to %s", id, status)
+                return False
+        except KeyError:
+            return False
+
+    def do_group_action(self, id):
+        """Execute a group action."""
+        so = self.my_openmotics.do_group_action(id)
+        #var_dump(so)
+        try:
+            if so['success'] is True:
+                return True
+            else:
+                _LOGGER.error("Error executing group action id %s ", id)
                 return False
         except KeyError:
             return False
