@@ -52,4 +52,4 @@ class OpenMoticsScene(Scene):
     def activate(self):
         """Activate the scene."""
         self.hub.do_group_action(self._id)
-        self.hub.update_status()
+        self.hub.force_update()

@@ -7,16 +7,17 @@ https://home-assistant.io/components/switch.openmotics/
 import logging
 
 #from homeassistant.components.openmotics import (OM_LOGIN, OM_LIGHTS, OM_OUTPUT_STATUS)
-from custom_components.openmotics import (OM_LOGIN, OM_LIGHTS, OM_OUTPUT_STATUS)
+from custom_components.openmotics import (OM_LOGIN, OM_LIGHTS, OM_OUTPUT_STATUS,
+                                          OM_OUTPUT_DIMMER)
 from homeassistant.components.light import (ATTR_BRIGHTNESS,
-                                           SUPPORT_BRIGHTNESS, Light)
+                                            SUPPORT_BRIGHTNESS, Light)
 
 # from var_dump import var_dump
 
 DEPENDENCIES = ['openmotics']
 
-BRIGHTNESS_SCALE_UP     = 2.55
-BRIGHTNESS_SCALE_DOWN   = 0.3925
+BRIGHTNESS_SCALE_UP = 2.55
+BRIGHTNESS_SCALE_DOWN = 0.3925
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,11 +62,11 @@ class OpenMoticsLight(Light):
     def supported_features(self):
         """Flag supported features."""
         """Check if the light's module is a Dimmer, return brightness as a supported feature."""
-        if self._module_type == 'D':
+        if self._module_type == OM_OUTPUT_DIMMER:
             return SUPPORT_BRIGHTNESS
         else:
             return 0
-        
+  
     @property
     def name(self):
         """Return the name of the light."""
@@ -93,17 +94,18 @@ class OpenMoticsLight(Light):
             brightness = int(kwargs[ATTR_BRIGHTNESS] * BRIGHTNESS_SCALE_DOWN)
             self._dimmer = brightness
         if self.hub.set_output(self._id, True, self._dimmer, self._timer):
-            self.hub.update_status()
+            self.hub.force_update()
             self._state = True
 
     def turn_off(self, **kwargs):
         """Turn devicee off."""
         if self.hub.set_output(self._id, False, None, None):
-            self.hub.update_status()
+            self.hub.force_update()
             self._state = False
 
     def update(self):
         """Update the state of the light."""
+        self.hub.update()
         output_statuses = self._hass.data[OM_OUTPUT_STATUS]
         if not output_statuses:
             _LOGGER.error('No responce form the controller')
@@ -121,4 +123,3 @@ class OpenMoticsLight(Light):
                         self._state = False
                 else:
                     self._state = None
-

@@ -74,17 +74,18 @@ class OpenMoticsSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn device on."""
         if self.hub.set_output(self._id, True, self._dimmer, self._timer):
-            self.hub.update_status()
+            self.hub.force_update()
             self._state = True
 
     def turn_off(self, **kwargs):
         """Turn devicee off."""
         if self.hub.set_output(self._id, False, None, None):
-            self.hub.update_status()
+            self.hub.force_update()
             self._state = False
 
     def update(self):
         """Update the state of the switch."""
+        self.hub.update()
         output_statuses = self._hass.data[OM_OUTPUT_STATUS]
         if not output_statuses:
             _LOGGER.error('No responce form the controller')
