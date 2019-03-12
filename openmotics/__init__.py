@@ -229,7 +229,7 @@ class OpenMoticsHub(Entity):
 
         Can be called from within other components and will bypass throttle.
         """
-        _LOGGER.info("Called function update_status")
+        _LOGGER.debug("Called function update_status")
         try:
             success1, output_status = self.get_output_status()
             if success1 is True:
@@ -249,7 +249,7 @@ class OpenMoticsHub(Entity):
 
     def get_output_status(self):
         """Get the status of all the outputs."""
-        _LOGGER.info("Called function get_output_status")
+        _LOGGER.debug("Called function get_output_status")
         try:
             ret = self.my_openmotics.get_output_status()
             return self._parse_output(ret)
