@@ -238,7 +238,7 @@ class OpenMoticsHub(Entity):
             if success2 is True:
                 self._hass.data[OM_THERMOSTAT_STATUS] = thermostat_status['status']
             if success1 and success2:
-                _LOGGER.info("OpenMotics Controller data updated successfully")
+                _LOGGER.debug("OpenMotics Controller data updated successfully")
             else:
                 _LOGGER.error("OpenMotics Controller data updated failed")
         except (AuthenticationException,
