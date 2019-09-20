@@ -100,18 +100,17 @@ class OpenMoticsLight(Light):
             brightness = int(kwargs[ATTR_BRIGHTNESS] * BRIGHTNESS_SCALE_DOWN)
             self._dimmer = brightness
         if self.hub.set_output(self._id, True, self._dimmer, self._timer):
-            self.hub.force_update()
             self._state = True
 
     def turn_off(self, **kwargs):
         """Turn devicee off."""
         if self.hub.set_output(self._id, False, None, None):
-            self.hub.force_update()
             self._state = False
 
     def update(self):
         """Update the state of the light."""
-        self.hub.update()
+        if not self.hub.update() and self._state is not None:
+            return
         output_statuses = self._hass.data[OM_OUTPUT_STATUS]
         if not output_statuses:
             _LOGGER.error('No responce form the controller')
