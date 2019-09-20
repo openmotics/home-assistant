@@ -10,6 +10,7 @@ import asyncio
 import logging
 import socket
 from datetime import timedelta
+from typing import Optional
 
 import voluptuous as vol
 
@@ -218,10 +219,10 @@ class OpenMoticsHub(object):
             _LOGGER.error(e)
             return None
 
-    #@Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self) -> Optional[bool]:
         """Update the status op the Openmotics modules."""
-        self.force_update()
+        return self.force_update()
 
     def force_update(self) -> bool:
         """Function to force an update of the modules.
