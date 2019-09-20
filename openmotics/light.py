@@ -18,6 +18,7 @@ DEPENDENCIES = ['openmotics']
 
 BRIGHTNESS_SCALE_UP = 2.55
 BRIGHTNESS_SCALE_DOWN = 0.3925
+NOT_IN_USE = "NOT_IN_USE"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +60,11 @@ class OpenMoticsLight(Light):
         self.update()
 
     @property
+    def hidden(self):
+        """Return True if the entity should be hidden from UIs."""
+        return self._name == NOT_IN_USE
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         """Check if the light's module is a Dimmer, return brightness as a supported feature."""
@@ -66,7 +72,7 @@ class OpenMoticsLight(Light):
             return SUPPORT_BRIGHTNESS
         else:
             return 0
-  
+
     @property
     def name(self):
         """Return the name of the light."""
