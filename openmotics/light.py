@@ -18,6 +18,7 @@ DEPENDENCIES = ['openmotics']
 
 BRIGHTNESS_SCALE_UP = 2.55
 BRIGHTNESS_SCALE_DOWN = 0.3925
+NOT_IN_USE = "NOT_IN_USE"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +60,11 @@ class OpenMoticsLight(Light):
         self.update()
 
     @property
+    def hidden(self):
+        """Return True if the entity should be hidden from UIs."""
+        return self._name == NOT_IN_USE
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         """Check if the light's module is a Dimmer, return brightness as a supported feature."""
@@ -66,7 +72,7 @@ class OpenMoticsLight(Light):
             return SUPPORT_BRIGHTNESS
         else:
             return 0
-  
+
     @property
     def name(self):
         """Return the name of the light."""
@@ -94,18 +100,17 @@ class OpenMoticsLight(Light):
             brightness = int(kwargs[ATTR_BRIGHTNESS] * BRIGHTNESS_SCALE_DOWN)
             self._dimmer = brightness
         if self.hub.set_output(self._id, True, self._dimmer, self._timer):
-            self.hub.force_update()
             self._state = True
 
     def turn_off(self, **kwargs):
         """Turn devicee off."""
         if self.hub.set_output(self._id, False, None, None):
-            self.hub.force_update()
             self._state = False
 
     def update(self):
         """Update the state of the light."""
-        self.hub.update()
+        if not self.hub.update() and self._state is not None:
+            return
         output_statuses = self._hass.data[OM_OUTPUT_STATUS]
         if not output_statuses:
             _LOGGER.error('No responce form the controller')

@@ -10,6 +10,7 @@ import asyncio
 import logging
 import socket
 from datetime import timedelta
+from typing import Optional
 
 import voluptuous as vol
 
@@ -17,7 +18,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT,
     CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.util import Throttle
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
 import homeassistant.helpers.config_validation as cv
 
@@ -94,7 +94,7 @@ def async_setup(hass, config):
     return True
 
 
-class OpenMoticsHub(Entity):
+class OpenMoticsHub(object):
     """Thread safe wrapper class for openmotics python sdk."""
 
     def __init__(self, hass, config):
@@ -125,7 +125,7 @@ class OpenMoticsHub(Entity):
             return self._parse_output(ret)
         except (AuthenticationException, MaintenanceModeException, ApiException,
                 ConnectTimeout, HTTPError, OSError) as e:
-            _LOGGER.error("Unable to connect to Abode: %s", str(e))
+            _LOGGER.error("Unable to connect to OpenMotics: %s", str(e))
             hass.components.persistent_notification.create(
                 'Error: {}<br />'
                 'You will need to restart hass after fixing.'
@@ -148,8 +148,8 @@ class OpenMoticsHub(Entity):
             if key == 'outputs':
                 if item is not None:
                     _LOGGER.info("found output modules.")
-                    self._hass.data[OM_SWITCHES] = self.get_outputs(OM_SWITCH_TYPE)
-                    self._hass.data[OM_LIGHTS] = self.get_outputs(OM_LIGHT_TYPE)
+                    self._hass.data[OM_SWITCHES] = self._get_outputs(OM_SWITCH_TYPE)
+                    self._hass.data[OM_LIGHTS] = self._get_outputs(OM_LIGHT_TYPE)
 
             if key == 'shutters':
                 if item is not None:
@@ -159,15 +159,15 @@ class OpenMoticsHub(Entity):
     def get_scenes(self):
         """Get the openmotics group actions ."""
         _LOGGER.info("found shutters modules.")
-        self._hass.data[OM_SCENES] = self.get_group_actions()
+        self._hass.data[OM_SCENES] = self._get_group_actions()
 
-    def get_outputs(self, output_type):
+    def _get_outputs(self, output_type):
         """Get the outputs.
 
            output_type is of type list
            """
         outputs = []
-        success, output_configs = self.get_output_configurations()
+        success, output_configs = self._get_output_configurations()
         if success is False:
             _LOGGER.error("Error getting output configurations")
             return outputs
@@ -181,7 +181,7 @@ class OpenMoticsHub(Entity):
             _LOGGER.warning("No outputs found with type %s", output_type)
         return outputs
 
-    def get_output_configurations(self):
+    def _get_output_configurations(self):
         """Get the output configurations."""
         try:
             ret = self.my_openmotics.get_output_configurations()
@@ -192,10 +192,10 @@ class OpenMoticsHub(Entity):
             _LOGGER.error(e)
             return None
 
-    def get_group_actions(self):
+    def _get_group_actions(self):
         """Get the outputs."""
         actions = []
-        success, action_configs = self.get_group_action_configurations()
+        success, action_configs = self._get_group_action_configurations()
         if success is False:
             _LOGGER.error("Error getting group action configurations")
             return actions
@@ -208,7 +208,7 @@ class OpenMoticsHub(Entity):
             _LOGGER.warning("No group actions found")
         return actions
 
-    def get_group_action_configurations(self):
+    def _get_group_action_configurations(self):
         """Get the group action configurations."""
         try:
             ret = self.my_openmotics.get_group_action_configurations()
@@ -219,35 +219,37 @@ class OpenMoticsHub(Entity):
             _LOGGER.error(e)
             return None
 
-    #@Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self) -> Optional[bool]:
         """Update the status op the Openmotics modules."""
-        self.force_update()
+        return self.force_update()
 
-    def force_update(self):
+    def force_update(self) -> bool:
         """Function to force an update of the modules.
 
         Can be called from within other components and will bypass throttle.
         """
         _LOGGER.debug("Called function update_status")
         try:
-            success1, output_status = self.get_output_status()
+            success1, output_status = self._get_output_status()
             if success1 is True:
                 self._hass.data[OM_OUTPUT_STATUS] = output_status['status']
-            success2, thermostat_status = self.get_thermostat_status()
+            success2, thermostat_status = self._get_thermostat_status()
             if success2 is True:
                 self._hass.data[OM_THERMOSTAT_STATUS] = thermostat_status['status']
             if success1 and success2:
                 _LOGGER.debug("OpenMotics Controller data updated successfully")
+                return True
             else:
                 _LOGGER.error("OpenMotics Controller data updated failed")
+                return False
         except (AuthenticationException,
                 MaintenanceModeException,
                 ApiException) as e:
             _LOGGER.error(e)
-            return None
+            return False
 
-    def get_output_status(self):
+    def _get_output_status(self):
         """Get the status of all the outputs."""
         _LOGGER.debug("Called function get_output_status")
         try:
@@ -259,7 +261,7 @@ class OpenMoticsHub(Entity):
             _LOGGER.error(e)
             return None
 
-    def get_thermostat_status(self):
+    def _get_thermostat_status(self):
         """Get the status of all the thermostats."""
         try:
             ret = self.my_openmotics.get_thermostat_status()
