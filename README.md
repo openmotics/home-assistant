@@ -13,10 +13,11 @@ Clone this repo into custom_components
 
 ```bash
 cd /home/home-assistant/.home-assistant
-mkdir custom_components
-git clone https://github.com/openmotics/home-assistant.git custom_components
+mkdir -p custom_components/openmotics
+cd custom_components
+git clone https://github.com/openmotics/home-assistant.git openmotics
 or 
-git clone -b dev https://github.com/openmotics/home-assistant.git custom_components
+git clone -b dev https://github.com/openmotics/home-assistant.git openmotics
 ```
     
 Add this to configuration.yaml:
@@ -24,10 +25,11 @@ Add this to configuration.yaml:
 openmotics:
   username: xxxx
   password: xxxx
-  host: xxxx
+  host: xxxx (Optional)
 ```
 
 Host can be local hostname, local ip address, `openmotics.local` or `cloud.openmotics.com`. If you're using local hostname or ip, you have to create a local user in the OpenMotics Gateway.
+If host is omitted, it connects by default to cloud.openmotics.com.
 
 ## License
 

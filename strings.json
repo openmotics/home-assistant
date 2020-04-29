@@ -1,0 +1,25 @@
+{
+  "config": {
+    "title": "OpenMotics",
+    "step": {
+      "user": {
+        "title": "Set up OpenMotics Controller",
+        "data": {
+          "host": "Host",
+          "username": "User Name",
+          "password": "Password",
+          "port": "Port",
+          "verify_ssl": "Controller using proper certificate"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}
