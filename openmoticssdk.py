@@ -3,7 +3,6 @@
 import random
 import time
 import traceback
-
 import requests
 
 try:
@@ -71,7 +70,7 @@ class OpenMoticsApi:
         url = self.get_url(action)
         post_data = self.get_post_data(post_data)
 
-        # print(f"Fetching url: {url}")
+        print(f"Fetching url: {url}")
 
         r = requests.post(url, params=get_params, data=post_data, verify=self.verify_https)
         if r.status_code == 401:

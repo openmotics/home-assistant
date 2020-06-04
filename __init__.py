@@ -25,9 +25,9 @@ from .gateway import OpenMoticsGateway
 # from var_dump import var_dump
 
 
-# from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
-# from .openmoticssdk import (ApiException, AuthenticationException,
-#                           MaintenanceModeException)
+from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
+from .openmoticssdk import (ApiException, AuthenticationException,
+                           MaintenanceModeException, traceback)
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({
@@ -57,6 +57,9 @@ async def async_setup(hass, config):
     conf = config[DOMAIN]
     hass.data[DATA_OPENMOTICS_CONFIG] = conf
 
+    if hass.config_entries.async_entries(DOMAIN):
+        _LOGGER.debug("Config entries exists.")
+
     if not hass.config_entries.async_entries(DOMAIN) and hass.data[DATA_OPENMOTICS_CONFIG]:
         # No config entry exists and configuration.yaml config exists, trigger the import flow.
         hass.async_create_task(
@@ -84,7 +87,27 @@ async def async_setup_entry(hass, config_entry):
     # hass.data[OM_CTRL] = OpenMoticsGateway(hass, config_entry)
     # gateway = hass.data[OM_CTRL]
     gateway = OpenMoticsGateway(hass, config_entry)
-    if not await gateway.async_setup():
+    _LOGGER.debug("before async_setup")
+    try:
+        if not await gateway.async_setup():
+            return False
+
+        status = gateway.api.get_status()
+
+    except AuthenticationException as err:
+        _LOGGER.error(err)
+        raise InvalidAuth
+
+    except (MaintenanceModeException, ApiException) as err:
+        _LOGGER.error(err)
+        raise CannotConnect
+
+    except Exception as err:
+        # traceback.print_exc()
+        raise CannotConnect
+
+    if status['success'] is False:
+        _LOGGER.debug("Something went wrong initialising the gateway")
         return False
 
     hass.data[DOMAIN][config_entry.unique_id] = gateway
@@ -111,14 +134,14 @@ async def async_unload_entry(hass, config_entry):
             *[
                 hass.config_entries.async_forward_entry_unload(
                     config_entry,
-                    component
+                    platform
                     )
-                for component in SUPPORTED_PLATFORMS
+                for platform in SUPPORTED_PLATFORMS
             ]
         )
     )
     if unload_ok:
-        # hass.data[DOMAIN].pop(config_entry)
+        hass.data[DOMAIN].pop(config_entry)
         hass.data.pop(DOMAIN)
 
     return unload_ok

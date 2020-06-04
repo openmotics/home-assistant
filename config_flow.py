@@ -54,13 +54,11 @@ async def check_openmotics_connection(hass: core.HomeAssistant, data):
     a dictionary, so this a temporary workaround
     """
     if data[CONF_HOST] == DEFAULT_HOST:
-        # from .openmoticssdk import OpenMoticsCloudApi
         api = OpenMoticsCloudApi(
             data[CONF_USERNAME],
             data[CONF_PASSWORD]
             )
     else:
-        # from .openmoticssdk import OpenMoticsApi
         api = OpenMoticsApi(
             data[CONF_USERNAME],
             data[CONF_PASSWORD],
@@ -109,10 +107,10 @@ class OpenMoticsFlowHandler(config_entries.ConfigFlow):
         )
 
     async def async_step_user(self, user_input=None):
-        """Handle the initial step."""
+        """Handle external yaml configuration."""
         if self._async_current_entries():
             _LOGGER.warning("Only one configuration of OpenMotics is allowed.")
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(reason="already_setup")
 
         errors = {}
 

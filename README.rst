@@ -16,10 +16,11 @@ cd /home/home-assistant/.home-assistant
 mkdir -p custom_components/openmotics
 cd custom_components
 git clone https://github.com/openmotics/home-assistant.git openmotics
-or 
+or
 git clone -b dev https://github.com/openmotics/home-assistant.git openmotics
 ```
-    
+
+
 Add this to configuration.yaml:
 ```
 openmotics:
