@@ -11,7 +11,7 @@ This plugin is a community effort and OpenMotics cannot give any warranties even
 To get started: Check out `home-assistant.io <https://home-assistant.io>`
 Clone this repo into custom_components
 
-```bash
+```
 cd /home/home-assistant/.home-assistant
 mkdir -p custom_components/openmotics
 cd custom_components
