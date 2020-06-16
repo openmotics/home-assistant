@@ -1,7 +1,7 @@
 """ Support for HomeAssistant switches. """
 # from var_dump import var_dump
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 # import homeassistant.helpers.device_registry as dr
 # from homeassistant.core import callback
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -43,7 +43,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class OpenMoticsSwitch(SwitchDevice):
+class OpenMoticsSwitch(SwitchEntity):
     """Representation of a OpenMotics switch."""
 
     def __init__(self, hass, gateway, switch):

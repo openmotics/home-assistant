@@ -2,7 +2,7 @@
 # from var_dump import var_dump
 
 from homeassistant.components.light import (ATTR_BRIGHTNESS,
-                                            SUPPORT_BRIGHTNESS, Light)
+                                            SUPPORT_BRIGHTNESS, LightEntity)
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from .const import (_LOGGER, DOMAIN, OPENMOTICS_MODULE_TYPE_TO_NAME,
@@ -57,7 +57,7 @@ def brightness_from_percentage(percent):
     return round((percent * 255.0) / 100.0)
 
 
-class OpenMoticsLight(Light):
+class OpenMoticsLight(LightEntity):
     """Representation of a OpenMotics light."""
 
     def __init__(self, hass, gateway, light):
