@@ -24,8 +24,8 @@ git clone -b dev https://github.com/openmotics/home-assistant.git openmotics
 Add this to configuration.yaml:
 ```
 openmotics:
-  username: xxxx
-  password: xxxx
+  client_id: xxxx
+  client_secret: xxxx
   host: xxxx (Optional)
 ```
 
