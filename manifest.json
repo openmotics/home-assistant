@@ -3,12 +3,13 @@
   "name": "OpenMotics",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/openmotics",
-  "requirements": [],
+  "requirements": ["openmotics-cloud-sdk==0.0.11"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
   "codeowners": [
+    "@openmotics",
     "@woutercoppens"
   ],
   "quality_scale": "silver"

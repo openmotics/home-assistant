@@ -8,31 +8,32 @@
 """
 # pylint: disable=import-outside-toplevel
 import asyncio
+# import async_timeout
 
 import voluptuous as vol
 
+from homeassistant import config_entries, core
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config_entries import \
     SOURCE_IMPORT  # Needed for config_flow
-from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_PORT,
-                                 CONF_USERNAME, CONF_VERIFY_SSL)
+from homeassistant.const import (CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_PORT,
+                                 CONF_HOST, CONF_VERIFY_SSL)
 
 from .const import (_LOGGER, DATA_OPENMOTICS_CONFIG, DEFAULT_HOST,
                     DEFAULT_PORT, DEFAULT_VERIFY_SSL, DOMAIN,
                     SUPPORTED_PLATFORMS)
-from .gateway import OpenMoticsGateway
 
+from openmotics.clients.cloud import BackendClient, APIError
 # from var_dump import var_dump
 
-
-from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
-from .openmoticssdk import (ApiException, AuthenticationException,
-                           MaintenanceModeException, traceback)
+# from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
+from .errors import CannotConnect
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({
-        vol.Optional(CONF_USERNAME, 'auth'): cv.string,
-        vol.Optional(CONF_PASSWORD, 'auth'): cv.string,
+        vol.Optional(CONF_CLIENT_ID, 'auth'): cv.string,
+        vol.Optional(CONF_CLIENT_SECRET, 'auth'): cv.string,
         vol.Optional(CONF_HOST, default=DEFAULT_HOST):
             # vol.All(cv.string, is_socket_address),
             cv.string,
@@ -68,8 +69,8 @@ async def async_setup(hass, config):
                 context={"source": SOURCE_IMPORT},
                 data={
                     CONF_HOST: conf.get(CONF_HOST, DEFAULT_HOST),
-                    CONF_USERNAME: conf.get(CONF_USERNAME),
-                    CONF_PASSWORD: conf.get(CONF_PASSWORD),
+                    CONF_CLIENT_ID: conf.get(CONF_CLIENT_ID),
+                    CONF_CLIENT_SECRET: conf.get(CONF_CLIENT_SECRET),
                     CONF_PORT: conf.get(CONF_PORT, DEFAULT_PORT),
                     CONF_VERIFY_SSL: conf.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
                 },
@@ -79,51 +80,81 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_openmotics_installation(hass: core.HomeAssistant, entry: config_entries.ConfigEntry, openmotics_installation):
+    """Set up the OpenMotics Installation."""
+    # entry_id = entry.entry_id
+    # hass.data[DOMAIN].setdefault(entry_id, {})
+
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, openmotics_installation['id'])},
+        manufacturer="OpenMotics",
+        name=openmotics_installation['name'],
+        model=openmotics_installation['gateway_model'],
+        sw_version=openmotics_installation['version'],
+    )
+
+    return True
+
+
+async def async_setup_entry(hass: core.HomeAssistant, entry: config_entries.ConfigEntry):
     """Set up OpenMotics Gateway from a config entry."""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
-    # hass.data[OM_CTRL] = OpenMoticsGateway(hass, config_entry)
-    # gateway = hass.data[OM_CTRL]
-    gateway = OpenMoticsGateway(hass, config_entry)
-    _LOGGER.debug("before async_setup")
+    host = entry.data.get(CONF_HOST)
+    client_id = entry.data.get(CONF_CLIENT_ID)
+    client_secret = entry.data.get(CONF_CLIENT_SECRET)
+    port = entry.data.get(CONF_PORT)
+    verify_ssl = entry.data.get(CONF_VERIFY_SSL)
+
+    """Set up a OpenMotics controller"""
+    if host == DEFAULT_HOST:
+        om_cloud = BackendClient(
+            client_id,
+            client_secret,
+            )
+    else:
+        om_cloud = BackendClient(
+            client_id,
+            client_secret,
+            server=host,
+            port=port,
+            ssl=verify_ssl
+            )
+
     try:
-        if not await gateway.async_setup():
-            return False
-
-        status = gateway.api.get_status()
-
-    except AuthenticationException as err:
-        _LOGGER.error(err)
-        raise InvalidAuth
-
-    except (MaintenanceModeException, ApiException) as err:
-        _LOGGER.error(err)
+        await hass.async_add_executor_job(om_cloud.get_token)
+    except asyncio.TimeoutError:
+        _LOGGER.error(
+            "Timeout connecting to the OpenMoticsApi at %s",
+            host
+            )
         raise CannotConnect
 
-    except Exception as err:
-        # traceback.print_exc()
+    except APIError:
+        _LOGGER.error(
+            "Error connecting to the OpenMoticsApi at %s",
+            host
+            )
+        # _LOGGER.error(err)
         raise CannotConnect
 
-    if status['success'] is False:
-        _LOGGER.debug("Something went wrong initialising the gateway")
-        return False
+    hass.data[DOMAIN][entry.entry_id] = om_cloud
 
-    hass.data[DOMAIN][config_entry.unique_id] = gateway
-
-    gateway.module_discover_start()
-
-    gateway.update()
+    om_installations = await hass.async_add_executor_job(om_cloud.installations)
+    for install in om_installations:
+        # print("- {}".format(install))
+        await async_setup_openmotics_installation(hass, entry, install)
 
     for platform in SUPPORTED_PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(
-                config_entry,
+                entry,
                 platform
                 )
         )
-
     return True
 
 

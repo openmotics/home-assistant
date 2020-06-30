@@ -4,31 +4,31 @@
 import voluptuous as vol
 
 # import homeassistant.helpers.config_validation as cv
-from homeassistant import config_entries, core
-from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_PORT,
-                                 CONF_USERNAME, CONF_VERIFY_SSL)
+from homeassistant import core, config_entries
+from homeassistant.const import (CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_PORT,
+                                 CONF_HOST, CONF_VERIFY_SSL)
+from homeassistant.core import callback
 
 from .const import (_LOGGER, DEFAULT_HOST, DEFAULT_PORT, DEFAULT_VERIFY_SSL,
                     DOMAIN)
 # from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 from .errors import CannotConnect, InvalidAuth
-from .openmoticssdk import (ApiException, AuthenticationException,
-                            MaintenanceModeException, OpenMoticsApi,
-                            OpenMoticsCloudApi)
+
+from openmotics.clients.cloud import BackendClient, APIError, LegacyClient
 
 # from var_dump import var_dump
-
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_CLIENT_ID): str,
+        vol.Required(CONF_CLIENT_SECRET): str,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
 )
 
+# _LOGGER = logging.getLogger(__name__)
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
@@ -54,24 +54,21 @@ async def check_openmotics_connection(hass: core.HomeAssistant, data):
     a dictionary, so this a temporary workaround
     """
     if data[CONF_HOST] == DEFAULT_HOST:
-        api = OpenMoticsCloudApi(
-            data[CONF_USERNAME],
-            data[CONF_PASSWORD]
+        api = BackendClient(
+            data[CONF_CLIENT_ID],
+            data[CONF_CLIENT_SECRET]
             )
     else:
-        api = OpenMoticsApi(
-            data[CONF_USERNAME],
-            data[CONF_PASSWORD],
-            data[CONF_HOST],
-            data[CONF_VERIFY_SSL],
-            data[CONF_PORT]
+        api = BackendClient(
+            data[CONF_CLIENT_ID],
+            data[CONF_CLIENT_SECRET],
+            server=data[CONF_HOST],
+            port=data[CONF_PORT],
+            ssl=data[CONF_VERIFY_SSL]
             )
     try:
-        api.get_status()
-    except AuthenticationException as err:
-        _LOGGER.error(err)
-        raise InvalidAuth
-    except (MaintenanceModeException, ApiException) as err:
+        api.get_token()
+    except APIError as err:
         _LOGGER.error(err)
         raise CannotConnect
 
@@ -99,9 +96,9 @@ class OpenMoticsFlowHandler(config_entries.ConfigFlow):
             title=f"{import_config.get(CONF_HOST)} (import from configuration.yaml)",
             data={
                 CONF_HOST: import_config.get(CONF_HOST),
-                CONF_PASSWORD: import_config.get(CONF_PASSWORD),
+                CONF_CLIENT_SECRET: import_config.get(CONF_CLIENT_SECRET),
                 CONF_PORT: import_config.get(CONF_PORT),
-                CONF_USERNAME: import_config.get(CONF_USERNAME),
+                CONF_CLIENT_ID: import_config.get(CONF_CLIENT_ID),
                 CONF_VERIFY_SSL: import_config.get(CONF_VERIFY_SSL),
             },
         )

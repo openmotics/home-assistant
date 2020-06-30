@@ -1,18 +1,18 @@
-""" Support for HomeAssistant lights. """
+"""Support for HomeAssistant lights."""
 # from var_dump import var_dump
 
 from homeassistant.components.light import (ATTR_BRIGHTNESS,
-                                            SUPPORT_BRIGHTNESS, Light)
+                                            SUPPORT_BRIGHTNESS, LightEntity)
 from homeassistant.const import STATE_OFF, STATE_ON
 
-from .const import (_LOGGER, DOMAIN, OPENMOTICS_MODULE_TYPE_TO_NAME,
-                    OPENMOTICS_OUTPUT_TYPE_TO_NAME)
-from .gateway import get_gateway_from_config_entry
-from .util import get_key_for_word
+from .const import (_LOGGER, DOMAIN, NOT_IN_USE)
+# from .const import (_LOGGER, DOMAIN, OPENMOTICS_MODULE_TYPE_TO_NAME,
+#                     OPENMOTICS_OUTPUT_TYPE_TO_NAME, NOT_IN_USE)
+# from .gateway import get_gateway_from_config_entry
+# from .util import get_key_for_word
 
 # import homeassistant.helpers.device_registry as dr
 # from homeassistant.core import callback
-
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -22,23 +22,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Lights for OpenMotics Controller."""
-    gateway = get_gateway_from_config_entry(hass, config_entry)
-
     entities = []
-    om_lights = []
 
-    light_type = get_key_for_word(OPENMOTICS_OUTPUT_TYPE_TO_NAME, 'light')
-    for module in gateway.get_om_output_modules():
-        if module['type'] == light_type:
-            om_lights.append(module)
+    om_cloud = hass.data[DOMAIN][config_entry.entry_id]
 
-    if not om_lights:
-        _LOGGER.debug("No lights found.")
-        return False
+    om_installations = await hass.async_add_executor_job(om_cloud.installations)
 
-    for entity in om_lights:
-        _LOGGER.debug("Adding light %s", entity)
-        entities.append(OpenMoticsLight(hass, gateway, entity))
+    for install in om_installations:
+        install_id = install.get('id')
+        om_lights = await hass.async_add_executor_job(om_cloud.lights, install_id)
+        if om_lights:
+            for om_light in om_lights:
+                if (om_light['name'] is None or om_light['name'] == "" or om_light['name'] == NOT_IN_USE):
+                    continue
+                # print("- {}".format(om_light))
+                entities.append(OpenMoticsLight(hass, om_cloud, install, om_light))
 
     if not entities:
         _LOGGER.warning("No OpenMotics Lights added")
@@ -57,58 +55,58 @@ def brightness_from_percentage(percent):
     return round((percent * 255.0) / 100.0)
 
 
-class OpenMoticsLight(Light):
+class OpenMoticsLight(LightEntity):
     """Representation of a OpenMotics light."""
 
-    def __init__(self, hass, gateway, light):
+    def __init__(self, hass, om_cloud, install, om_light):
         """Initialize the light."""
         self._hass = hass
-        self.gateway = gateway
-        self._id = light['id']
-        self._name = light['name']
-        self._floor = light['floor']
-        self._room = light['room']
-        self._module_type = light['module_type']
-        self._type = light['type']
-        self._timer = None
+        self.om_cloud = om_cloud
+        self._install_id = install['id']
+        self._device = om_light
         self._dimmer = None
         self._state = None
-
-        self._refresh()
 
     @property
     def supported_features(self):
         """Flag supported features."""
         # Check if the light's module is a Dimmer, return brightness as a supported feature.
-        if self._module_type == get_key_for_word(OPENMOTICS_MODULE_TYPE_TO_NAME, 'Dimmer'):
-            return SUPPORT_BRIGHTNESS
+        # if self._module_type == get_key_for_word(OPENMOTICS_MODULE_TYPE_TO_NAME, 'Dimmer'):
+        #     return SUPPORT_BRIGHTNESS
 
         return 0
 
-    # @property
-    # def should_poll(self):
-    #     """Enable polling."""
-    #     return True
+    @property
+    def should_poll(self):
+        """Enable polling."""
+        return True
 
     @property
     def name(self):
         """Return the name of the light."""
-        return self._name
+        return self._device['name']
 
     @property
     def floor(self):
         """Return the floor of the light."""
-        return self._floor
+        location = self._device['location']
+        return location['floor_id']
 
     @property
     def room(self):
         """Return the room of the light."""
-        return self._room
+        location = self._device['location']
+        return location['room_id']
 
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._id
+        return self._device['id']
+
+    @property
+    def install_id(self):
+        """Return the installation ID."""
+        return self._install_id
 
     @property
     def is_on(self):
@@ -118,15 +116,15 @@ class OpenMoticsLight(Light):
     @property
     def device_info(self):
         """Return information about the device."""
-        info = {
+        return {
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "id": self.unique_id,
             "floor": self.floor,
             "room": self.room,
+            "installation": self.install_id,
             "manufacturer": "OpenMotics",
         }
-        return info
 
     @property
     def available(self):
@@ -156,46 +154,33 @@ class OpenMoticsLight(Light):
 
         self._dimmer = brightness_to_percentage(brightness)
 
-        sop = self.gateway.api.set_output(self._id, True, self._dimmer, self._timer)
-        if sop['success'] is True:
-            self._state = STATE_ON
-        else:
-            _LOGGER.error("Error setting output id %s to True", self._id)
-            self._state = STATE_OFF
+        response = await self.hass.async_add_executor_job(self.om_cloud.output_turn_on, self.install_id, self.unique_id, self._dimmer)
+
+        # Turns on a specified Output object.
+        # The call can optionally receive a JSON object that states the value in case the Output is dimmable.
+        if response:
+            print("- {}".format(response))
+
+        self.async_update
 
     async def async_turn_off(self, **kwargs):
         """Turn devicee off."""
-        sop = self.gateway.api.set_output(self._id, False, None, None)
-        if sop['success'] is True:
-            self._state = STATE_OFF
-        else:
-            _LOGGER.error("Error setting output id %s to False", self._id)
-            self._state = STATE_ON
+        response = await self.hass.async_add_executor_job(self.om_cloud.output_turn_off, self.install_id, self.unique_id)
+
+        self.async_update
 
     async def async_update(self):
-        """Retrieve latest state."""
-        self._refresh()
-
-    def _refresh(self):
         """Refresh the state of the light."""
-        if not self.gateway.update() and self._state is not None:
-            return
-
-        output_status = self.gateway.get_output_status(self._id)
-        # {'status': 1, 'dimmer': 100, 'ctimer': 0, 'id': 66}
+        output_status = await self.hass.async_add_executor_job(self.om_cloud.output_by_id, self.install_id, self.unique_id)
 
         if not output_status:
             _LOGGER.error('Light._refresh: No responce form the controller')
             return
-
-        if output_status['dimmer'] is not None:
-            self._dimmer = output_status['dimmer']
-
-        if output_status['ctimer'] is not None:
-            self._ctimer = output_status['ctimer']
+        # print("- {}".format(output_status))
 
         if output_status['status'] is not None:
-            if output_status['status'] == 1:
+            status = output_status['status']
+            if status['on'] is True:
                 self._state = STATE_ON
             else:
                 self._state = STATE_OFF

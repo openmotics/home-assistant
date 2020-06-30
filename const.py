@@ -59,5 +59,5 @@ OPENMOTICS_MODULE_TYPE_TO_NAME = {
     'L': 'Unknown'
 }
 
-SUPPORTED_PLATFORMS = ["light", "switch", "scene"]
-# SUPPORTED_PLATFORMS = ["light"]
+# SUPPORTED_PLATFORMS = ["light", "switch", "scene"]
+SUPPORTED_PLATFORMS = ["light", "switch"]
