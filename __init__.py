@@ -11,7 +11,7 @@ import asyncio
 # import async_timeout
 
 import voluptuous as vol
-
+from homeassistant.core import callback
 from homeassistant import config_entries, core
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv

@@ -4,6 +4,7 @@
 from homeassistant.components.light import (ATTR_BRIGHTNESS,
                                             SUPPORT_BRIGHTNESS, LightEntity)
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import callback
 
 from .const import (_LOGGER, DOMAIN, NOT_IN_USE)
 # from .const import (_LOGGER, DOMAIN, OPENMOTICS_MODULE_TYPE_TO_NAME,

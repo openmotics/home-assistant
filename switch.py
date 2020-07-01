@@ -3,7 +3,7 @@
 
 from homeassistant.components.switch import SwitchEntity
 # import homeassistant.helpers.device_registry as dr
-# from homeassistant.core import callback
+from homeassistant.core import callback
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from .const import (_LOGGER, DOMAIN, NOT_IN_USE)
