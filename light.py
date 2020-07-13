@@ -65,15 +65,15 @@ class OpenMoticsLight(LightEntity):
         self.om_cloud = om_cloud
         self._install_id = install['id']
         self._device = om_light
-        self._dimmer = None
-        self._state = None
+        self._brightness: Optional[int] = None
+        self._state: bool = False
 
     @property
     def supported_features(self):
         """Flag supported features."""
         # Check if the light's module is a Dimmer, return brightness as a supported feature.
-        # if self._module_type == get_key_for_word(OPENMOTICS_MODULE_TYPE_TO_NAME, 'Dimmer'):
-        #     return SUPPORT_BRIGHTNESS
+        if 'RANGE' in self._device['capabilities']:
+            return SUPPORT_BRIGHTNESS
 
         return 0
 
@@ -133,35 +133,26 @@ class OpenMoticsLight(LightEntity):
         return self._state is not None
 
     @property
-    def brightness(self) -> int:
-        """Return the brightness of this light between 0..255."""
-        # brightness = int(self._dimmer * BRIGHTNESS_SCALE_UP)
-        # :type dimmer: Integer [0, 100] or None
-        if self._dimmer is None:
-            return 0
-
-        return brightness_from_percentage(self._dimmer)
+    def brightness(self):
+        """Return the brightness of this light."""
+        return self._brightness
 
     async def async_turn_on(self, **kwargs):
         """Turn device on."""
-        brightness = 0
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS]
-        else:
-            if self._dimmer is not None:
-                brightness = brightness_from_percentage(self._dimmer)
-            if brightness == 0:
-                brightness = 255
+        value: Optional[int] = None
+        brightness = kwargs.get(light.ATTR_BRIGHTNESS)
+        if brightness is not None:
+                value = brightness_to_percentage(brightness)
 
-        self._dimmer = brightness_to_percentage(brightness)
-
-        response = await self.hass.async_add_executor_job(self.om_cloud.output_turn_on, self.install_id, self.unique_id, self._dimmer)
+        response = await self.hass.async_add_executor_job(self.om_cloud.output_turn_on, self.install_id, self.unique_id, brightness)
 
         # Turns on a specified Output object.
         # The call can optionally receive a JSON object that states the value in case the Output is dimmable.
         if response:
-            print("- {}".format(response))
-
+            try:
+                self._brightness = brightness_from_percentage(responce['value'])
+            except KeyError:
+                self._brightness = None
         self.async_update
 
     async def async_turn_off(self, **kwargs):
@@ -185,5 +176,10 @@ class OpenMoticsLight(LightEntity):
                 self._state = STATE_ON
             else:
                 self._state = STATE_OFF
+            # if a light is not dimmable, the value field is not present.
+            try:
+                self._brightness = brightness_from_percentage(status['value'])
+            except KeyError:
+                self._brightness = None
         else:
             self._state = None

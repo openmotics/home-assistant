@@ -51,17 +51,17 @@ class OpenMoticsScene(Scene):
         """Return the name of the light."""
         return self._device['name']
 
-    @property
-    def floor(self):
-        """Return the floor of the light."""
-        location = self._device['location']
-        return location['floor_id']
+    # @property
+    # def floor(self):
+    #     """Return the floor of the light."""
+    #     location = self._device['location']
+    #     return location['floor_id']
 
-    @property
-    def room(self):
-        """Return the room of the light."""
-        location = self._device['location']
-        return location['room_id']
+    # @property
+    # def room(self):
+    #     """Return the room of the light."""
+    #     location = self._device['location']
+    #     return location['room_id']
 
     @property
     def unique_id(self):
@@ -80,8 +80,8 @@ class OpenMoticsScene(Scene):
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "id": self.unique_id,
-            "floor": self.floor,
-            "room": self.room,
+            # "floor": self.floor,
+            # "room": self.room,
             "installation": self.install_id,
             "manufacturer": "OpenMotics",
         }
