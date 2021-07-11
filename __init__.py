@@ -92,7 +92,7 @@ async def async_setup_entry(hass, config_entry):
         if not await gateway.async_setup():
             return False
 
-        status = gateway.api.get_status()
+        status = await hass.async_add_executor_job(gateway.api.get_status)
 
     except AuthenticationException as err:
         _LOGGER.error(err)
@@ -112,9 +112,9 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN][config_entry.unique_id] = gateway
 
-    gateway.module_discover_start()
+    await hass.async_add_executor_job(gateway.module_discover_start)
 
-    gateway.update()
+    await hass.async_add_executor_job(gateway.update)
 
     for platform in SUPPORTED_PLATFORMS:
         hass.async_create_task(

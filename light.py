@@ -156,7 +156,7 @@ class OpenMoticsLight(LightEntity):
 
         self._dimmer = brightness_to_percentage(brightness)
 
-        sop = self.gateway.api.set_output(self._id, True, self._dimmer, self._timer)
+        sop = await self._hass.async_add_executor_job(self.gateway.api.set_output, self._id, True, self._dimmer, self._timer)
         if sop['success'] is True:
             self._state = STATE_ON
         else:
@@ -165,7 +165,7 @@ class OpenMoticsLight(LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn devicee off."""
-        sop = self.gateway.api.set_output(self._id, False, None, None)
+        sop = await self._hass.async_add_executor_job(self.gateway.api.set_output, self._id, False, None, None)
         if sop['success'] is True:
             self._state = STATE_OFF
         else:
@@ -174,7 +174,7 @@ class OpenMoticsLight(LightEntity):
 
     async def async_update(self):
         """Retrieve latest state."""
-        self._refresh()
+        await self._hass.async_add_executor_job(self._refresh)
 
     def _refresh(self):
         """Refresh the state of the light."""

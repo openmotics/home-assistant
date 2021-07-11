@@ -333,7 +333,7 @@ async def get_api(hass, config):
             )
     try:
         with async_timeout.timeout(15):
-            api.get_status()
+            await hass.async_add_executor_job(api.get_status)
         return api
 
     except asyncio.TimeoutError:
