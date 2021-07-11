@@ -11,6 +11,7 @@ from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_PORT,
                                  CONF_USERNAME, CONF_VERIFY_SSL)
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.util import Throttle
 
 from .const import (_LOGGER, DEFAULT_HOST, DOMAIN, MIN_TIME_BETWEEN_UPDATES,
                     NOT_IN_USE)
@@ -20,7 +21,6 @@ from .openmoticssdk import (ApiException, AuthenticationException,
 
 # from var_dump import var_dump
 
-# from homeassistant.util import Throttle
 
 # from .modules import OpenMoticsOutputModuleEntity
 
@@ -250,25 +250,10 @@ class OpenMoticsGateway:
 
         return True
 
-    # @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the status op the Openmotics modules."""
-        if self.last_update_time is None:
-            if self.update_status():
-                self.last_update_time = time.time()
-            else:
-                # update_status failes, so last_update_time is still None
-                return False
-
-        # Throttle the number of requests to the controller
-        if time.time() - self.last_update_time >= MIN_TIME_BETWEEN_UPDATES:
-            if self.update_status():
-                self.last_update_time = time.time()
-            else:
-                self.last_update_time = None
-                return False
-
-        return True
+        return self.update_status()
 
     def update_status(self):
         """

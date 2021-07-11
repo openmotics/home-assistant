@@ -1,7 +1,7 @@
 """Constants for the OpenMotics integration."""
 import logging
 
-# from datetime import timedelta
+from datetime import timedelta
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -16,8 +16,8 @@ The state of a light is refreshed every 30 seconds (more or less).
 Setting the interval between updates to 30 seconds was just a little bit
 to late. 28 seconds is better.
 """
-# MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
-MIN_TIME_BETWEEN_UPDATES = 28  # seconds
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=28)
+# MIN_TIME_BETWEEN_UPDATES = 28  # seconds
 
 
 DEFAULT_HOST = 'cloud.openmotics.com'
