@@ -11,5 +11,6 @@
   "codeowners": [
     "@woutercoppens"
   ],
-  "quality_scale": "silver"
+  "quality_scale": "silver",
+  "version": "0.0.1"
 }
