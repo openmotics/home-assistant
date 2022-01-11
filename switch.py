@@ -52,7 +52,7 @@ class OpenMoticsSwitch(SwitchEntity):
         self.gateway = gateway
         self._id = switch['id']
         self._name = switch['name']
-        self._floor = switch['floor']
+        self._floor = switch.get('floor', 0)
         self._room = switch['room']
         self._timer = None
         self._dimmer = None

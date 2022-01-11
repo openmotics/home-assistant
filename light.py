@@ -66,7 +66,7 @@ class OpenMoticsLight(LightEntity):
         self.gateway = gateway
         self._id = light['id']
         self._name = light['name']
-        self._floor = light['floor']
+        self._floor = light.get('floor', 0)
         self._room = light['room']
         self._module_type = light['module_type']
         self._type = light['type']
