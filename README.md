@@ -1,3 +1,10 @@
+# READ THIS FIRST
+
+We're currently working on a new version that supports recent versions of home assistant. A first version can be found at:
+https://github.com/woutercoppens/home-assistant
+
+We have not yet merged the repositories because the framework we're using to access OpenMotics hasn't yet stabilized. 
+
 # Home Assistant - OpenMotics plugin
 
 Home Assistant is a home automation platform running on Python 3. It is able to track and control all devices at home and offer a platform for automating control.
