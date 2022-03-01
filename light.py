@@ -178,7 +178,7 @@ class OpenMoticsLight(LightEntity):
 
     def _refresh(self):
         """Refresh the state of the light."""
-        if not self.gateway.update() and self._state is not None:
+        if self.gateway.update() is False and self._state is not None:
             return
 
         output_status = self.gateway.get_output_status(self._id)
