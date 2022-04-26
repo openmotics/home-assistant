@@ -10,7 +10,7 @@
 <h2 align="center">
    <a href="https://www.openmotics.com/en/">OpenMotics</a> and<a href="https://www.home-assistant.io"> Home Assistant</a> integration  🏡 ☀
    </br></br>
-   <img src="https://github.com/openmotics/home-assistant/blob/master/pictures/openmotics-logo" >
+   <img src="https://github.com/openmotics/home-assistant/blob/master/pictures/openmotics-logo.png" >
    </br>
    <a href="https://github.com/hacs/default"><img src="https://img.shields.io/badge/HACS-default-sucess"></a>
     </br>
