@@ -18,7 +18,7 @@
 
 _Component to integrate with [integration_blueprint][integration_blueprint]._
 
-This integration allows visibility and control of the OpenMotics system in Home Assistant. For information about how to configure and the features included in the integration, please see the [Readme.md](https://github.com/openmotics/home-assistant/blob/master/Readme.Md)
+This integration allows visibility and control of the OpenMotics system in Home Assistant. For information about how to configure and the features included in the integration, please see the [Readme.md](https://github.com/openmotics/home-assistant/blob/master/README.md)
 
 {% if not installed %}
 ## ⚙️ Installation & ♻️ Update
