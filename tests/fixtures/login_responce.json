@@ -1,0 +1,7 @@
+{
+    "access_token": "eyJ0eXAiOiJKV1NiLCJhbGciOiJIUzI1NiJ9",
+    "expires_in": 36000,
+    "token_type": "Bearer",
+    "scope": "control view configure",
+    "expires_at": 1648354087
+}
