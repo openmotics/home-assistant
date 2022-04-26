@@ -1,0 +1,47 @@
+{
+  "config": {
+    "title": "OpenMotics",
+    "step": {
+      "user": {
+        "title": "Set up OpenMotics Controller",
+        "data": {
+          "environment": ""
+        }
+      },
+      "cloud": {
+        "title": "OpenMotics Cloud credentials",
+        "data": {
+          "client_id": "Client ID (required)",
+          "client_secret": "Client Secret (required)"
+        }
+      },
+      "local": {
+        "title": "OpenMotics Local Gateway Credentials",
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip_address%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "post": "[%key:common::config_flow::data::port%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      },
+      "installation": {
+        "title": "Select the installation",
+        "description": "Please select the OpenMotics installation you wish to add to Home Assistant.",
+        "data": {
+          "installation_id": "[%key:common::config_flow::data::installation_id%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "ssl_error": "SSL certificate issue",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "no_available_installations": "There are no available OpenMotics installation to setup in Home Assistant."
+    }
+  }
+}

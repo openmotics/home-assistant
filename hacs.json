@@ -1,0 +1,6 @@
+{
+  "name": "OpenMotics Integration",
+  "domains": ["light", "sensor", "switch", "scene"],
+  "iot_class": "Cloud Polling",
+  "homeassistant": "2022.3.0"
+}

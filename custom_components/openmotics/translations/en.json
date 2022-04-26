@@ -1,0 +1,52 @@
+{
+  "config": {
+    "title": "OpenMotics",
+    "step": {
+      "user": {
+        "title": "Set up OpenMotics Controller",
+        "data": {
+          "environment": ""
+        }
+      },
+      "cloud": {
+        "title": "OpenMotics Cloud Credentials",
+        "data": {
+          "client_id": "Client ID (required)",
+          "client_secret": "Client Secret (required)"
+        }
+      },
+      "local": {
+        "title": "OpenMotics Local Gateway Credentials",
+        "data": {
+          "ip_address": "Ip address",
+          "username": "Username",
+          "password": "Password",
+          "post": "Port",
+          "verify_ssl": "Verify SSL certificate"
+        }
+      },
+      "Installation": {
+        "title": "OpenMotics Installation",
+        "description": "Select the installation you want to add to Home Assistant",
+        "data": {
+          "installation_id": "Installation ID"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Error connecting to Open Motics API.",
+      "auth": "Something went wrong.",
+      "ssl_error": "SSL certificate issue",
+      "invalid_auth": "Problem with credentials.",
+      "unknown": "Unknown error occurred. Please enable debugging."
+    },
+    "abort": {
+      "invalid_auth": "Invalid client_id and client_secret",
+      "ssl_error": "You have an old gateway with an oid SSL version. Please use the cloud. ",
+      "missing_configuration": "The OpenMotics integration is not configured. Please follow the documentation."
+    },
+    "create_entry": {
+      "default": "Successfully authenticated with OpenMotics."
+    }
+  }
+}
