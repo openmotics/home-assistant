@@ -108,7 +108,7 @@ Make sure you restart Home Assistant after the installation (in HACS). After the
 
 ![Integration setup](/pictures/integration_setup.png)
 
-Fill in the user_id and secret_id you have created in the first step.
+Fill in the client_id and client_secret you have created in the first step.
 
 ![Integration setup_cloud](/pictures/integration_setup_cloud.png)
 
