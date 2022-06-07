@@ -51,6 +51,9 @@ Create an additional user
 
 ![user02](/pictures/user02.png)
 
+Note: Since the last update of the webui, the link to the integrations is missing. You can access it directly via:
+[https://portal.openmotics.com/#cloud/oauth](https://portal.openmotics.com/#cloud/oauth)
+
 ![user03](/pictures/user03.png)
 
 ![user04](/pictures/user04.png)
