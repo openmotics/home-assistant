@@ -117,9 +117,17 @@ class OpenMoticsShutter(OpenMoticsDevice, CoverEntity):
         # for OM 0 is open and 100 is closed
         try:
             self._device = self.coordinator.data["shutters"][self.index]
-            if self._device.status.position is None:
-                return None
-            return 100 - self._device.status.position
+            if self._supported_features & SUPPORT_SET_POSITION:
+                if self._device.status.position is None:
+                    return None
+                return 100 - self._device.status.position
+
+            if VALUE_TO_STATE.get(self._state) == STATE_CLOSED:
+                return 0
+            elif VALUE_TO_STATE.get(self._state) == STATE_OPEN:
+                return 100
+            else:
+                return STATE_UNKNOWN
         except (AttributeError, KeyError):
             return STATE_UNKNOWN
 
