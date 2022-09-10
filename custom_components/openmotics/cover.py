@@ -88,7 +88,7 @@ class OpenMoticsShutter(OpenMoticsDevice, CoverEntity):
         """Return if the cover is opening or not."""
         try:
             self._device = self.coordinator.data["shutters"][self.index]
-            self._state = self._device.status.state
+            self._state = self._device.status.state.upper()
             return VALUE_TO_STATE.get(self._state) == STATE_OPENING
         except (AttributeError, KeyError):
             return STATE_UNKNOWN
@@ -98,7 +98,7 @@ class OpenMoticsShutter(OpenMoticsDevice, CoverEntity):
         """Return if the cover is closing or not."""
         try:
             self._device = self.coordinator.data["shutters"][self.index]
-            self._state = self._device.status.state
+            self._state = self._device.status.state.upper()
             return VALUE_TO_STATE.get(self._state) == STATE_CLOSING
         except (AttributeError, KeyError):
             return STATE_UNKNOWN
