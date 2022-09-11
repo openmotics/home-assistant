@@ -55,6 +55,10 @@ class OpenMoticsDataUpdateCoordinator(DataUpdateCoordinator):
             my_groupactions = await self._omclient.groupactions.get_all()
             my_shutters = await self._omclient.shutters.get_all()
             my_sensors = await self._omclient.sensors.get_all()
+            if hasattr(self._omclient, "energysensors"):
+                my_energysensors = await self._omclient.energysensors.get_all()
+            else:
+                my_energysensors = []
 
         except OpenMoticsError as err:
             _LOGGER.error("Could not retrieve the data from the OpenMotics API")
@@ -65,6 +69,7 @@ class OpenMoticsDataUpdateCoordinator(DataUpdateCoordinator):
                 "groupactions": [],
                 "shutters": [],
                 "sensors": [],
+                "energysensors": [],
             }
         # Store data in a way Home Assistant can easily consume it
         return {
@@ -73,6 +78,7 @@ class OpenMoticsDataUpdateCoordinator(DataUpdateCoordinator):
             "groupactions": my_groupactions,
             "shutters": my_shutters,
             "sensors": my_sensors,
+            "energysensors": my_energysensors,
         }
 
     @property
