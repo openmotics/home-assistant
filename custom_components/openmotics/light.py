@@ -101,32 +101,45 @@ class OpenMoticsOutputLight(OpenMoticsDevice, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
-        if ATTR_BRIGHTNESS in kwargs:
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        if brightness is not None:
             # Openmotics brightness (value) is between 0..100
             _LOGGER.debug(
                 "Turning on light: %s brightness %s",
                 self.device_id,
-                kwargs[ATTR_BRIGHTNESS],
+                brightness,
             )
-            await self.coordinator.omclient.outputs.turn_on(
+            result = await self.coordinator.omclient.outputs.turn_on(
                 self.device_id,
-                brightness_to_percentage(kwargs[ATTR_BRIGHTNESS]),  # value
+                brightness_to_percentage(brightness),  # value
             )
         else:
             _LOGGER.debug("Turning on light: %s", self.device_id)
-            await self.coordinator.omclient.outputs.turn_on(
+            result = await self.coordinator.omclient.outputs.turn_on(
                 self.device_id,
             )
 
-        await self.coordinator.async_refresh()
+        await self._update_state_from_result(result, True, brightness)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn devicee off."""
+        """Turn device off."""
         _LOGGER.debug("Turning off light: %s", self.device_id)
-        await self.coordinator.omclient.outputs.turn_off(
+        result = await self.coordinator.omclient.outputs.turn_off(
             self.device_id,
         )
-        await self.coordinator.async_refresh()
+        await self._update_state_from_result(result, False, None)
+
+    async def _update_state_from_result(
+        self, result: Any, state: bool, brightness: int | None
+    ) -> None:
+        if isinstance(result, dict) and result.get("success") is True:
+            self._device.status.on = state
+            if brightness is not None:
+                self._device.status.value = brightness
+            self.async_write_ha_state()
+        else:
+            _LOGGER.debug("Invalid result, refreshing all")
+            await self.coordinator.async_refresh()
 
 
 class OpenMoticsLight(OpenMoticsDevice, LightEntity):
@@ -174,29 +187,42 @@ class OpenMoticsLight(OpenMoticsDevice, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
-        if ATTR_BRIGHTNESS in kwargs:
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        if brightness is not None:
             # Openmotics brightness (value) is between 0..100
             _LOGGER.debug(
                 "Turning on light: %s brightness %s",
                 self.device_id,
-                kwargs[ATTR_BRIGHTNESS],
+                brightness,
             )
-            await self.coordinator.omclient.lights.turn_on(
+            result = await self.coordinator.omclient.lights.turn_on(
                 self.device_id,
-                brightness_to_percentage(kwargs[ATTR_BRIGHTNESS]),  # value
+                brightness_to_percentage(brightness),  # value
             )
         else:
             _LOGGER.debug("Turning on light: %s", self.device_id)
-            await self.coordinator.omclient.lights.turn_on(
+            result = await self.coordinator.omclient.lights.turn_on(
                 self.device_id,
             )
 
-        await self.coordinator.async_refresh()
+        await self._update_state_from_result(result, True, brightness)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn devicee off."""
+        """Turn device off."""
         _LOGGER.debug("Turning off light: %s", self.device_id)
-        await self.coordinator.omclient.lights.turn_off(
+        result = await self.coordinator.omclient.lights.turn_off(
             self.device_id,
         )
-        await self.coordinator.async_refresh()
+        await self._update_state_from_result(result, False, None)
+
+    async def _update_state_from_result(
+        self, result: Any, state: bool, brightness: int | None
+    ) -> None:
+        if isinstance(result, dict) and result.get("success") is True:
+            self._device.status.on = state
+            if brightness is not None:
+                self._device.status.value = brightness
+            self.async_write_ha_state()
+        else:
+            _LOGGER.debug("Invalid result, refreshing all")
+            await self.coordinator.async_refresh()
