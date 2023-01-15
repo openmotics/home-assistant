@@ -36,6 +36,7 @@ VALUE_TO_STATE = {
     "STOP": STATE_PAUSED,
     None: STATE_UNKNOWN,
 }
+STATE_TO_VALUE = {v: k for k, v in VALUE_TO_STATE.items()}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,32 +134,46 @@ class OpenMoticsShutter(OpenMoticsDevice, CoverEntity):
 
     async def async_open_cover(self, **kwargs):
         """Open the window cover."""
-        await self.coordinator.omclient.shutters.move_up(
+        result = await self.coordinator.omclient.shutters.move_up(
             self.device_id,
         )
-        await self.coordinator.async_refresh()
+        await self._update_state_from_result(result, state=STATE_OPENING)
 
     async def async_close_cover(self, **kwargs):
         """Open the window cover."""
-        await self.coordinator.omclient.shutters.move_down(
+        result = await self.coordinator.omclient.shutters.move_down(
             self.device_id,
         )
-        await self.coordinator.async_refresh()
+        await self._update_state_from_result(result, state=STATE_CLOSING)
 
     async def async_stop_cover(self, **kwargs):
         """Stop the window cover."""
-        await self.coordinator.omclient.shutters.stop(
+        result = await self.coordinator.omclient.shutters.stop(
             self.device_id,
         )
-        await self.coordinator.async_refresh()
+        await self._update_state_from_result(result, state=STATE_PAUSED)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         if not self._supported_features & SUPPORT_SET_POSITION:
             return
         position = 100 - kwargs[ATTR_POSITION]
-        await self.coordinator.omclient.shutters.change_position(
+        result = await self.coordinator.omclient.shutters.change_position(
             self.device_id,
             position,
         )
-        await self.coordinator.async_refresh()
+        await self._update_state_from_result(result, position=position)
+
+    async def _update_state_from_result(
+        self, result: Any, *, state: str | None = None, position: int | None = None
+    ) -> None:
+        if isinstance(result, dict) and result.get("success") is True:
+            if state is not None:
+                self._state = STATE_TO_VALUE.get(state)
+                self._device.status.state = self._state
+            if position is not None:
+                self._device.status.position = position
+            self.async_write_ha_state()
+        else:
+            _LOGGER.debug("Invalid result, refreshing all")
+            await self.coordinator.async_refresh()

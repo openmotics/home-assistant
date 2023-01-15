@@ -64,22 +64,22 @@ class OpenMoticsSwitch(OpenMoticsDevice, SwitchEntity):
             return None
 
     async def async_turn_on(self, **kwargs) -> None:
-        """Turn devicee off."""
-        await self.coordinator.omclient.outputs.turn_on(
+        """Turn device off."""
+        result = await self.coordinator.omclient.outputs.turn_on(
             self.device_id,
             100,  # value is required but an outlet goes only on/off so we set it to 100
         )
-        await self.coordinator.async_refresh()
+        await self._update_state_from_result(result, True)
 
     async def async_turn_off(self, **kwargs) -> None:
-        """Turn devicee off."""
-        await self.coordinator.omclient.outputs.turn_off(
+        """Turn device off."""
+        result = await self.coordinator.omclient.outputs.turn_off(
             self.device_id,
         )
-        await self.coordinator.async_refresh()
+        await self._update_state_from_result(result, False)
 
     async def async_toggle(self, **kwargs) -> None:
-        """Turn devicee off."""
+        """Turn device off."""
         await self.coordinator.omclient.outputs.toggle(
             self.device_id,
         )
@@ -99,3 +99,11 @@ class OpenMoticsSwitch(OpenMoticsDevice, SwitchEntity):
                 return "mdi:fan"
             return "mdi:fan-off"
         return None
+
+    async def _update_state_from_result(self, result: Any, state: bool) -> None:
+        if isinstance(result, dict) and result.get("success") is True:
+            self._device.status.on = state
+            self.async_write_ha_state()
+        else:
+            _LOGGER.debug("Invalid result, refreshing all")
+            await self.coordinator.async_refresh()
