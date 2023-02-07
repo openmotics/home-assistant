@@ -2,7 +2,7 @@
 
 **BETA WARNING: this Beta release contains a significant amount of changes to support Outputs, Lights, Scenes and Shutters for the OpenMotics Gateway. It equally uses v0.0.1 of the pyHAopenmotics API, which also contains a significant amount of changes.  It has been tested but may contain some bugs in existing or new functionality.  Use in your live environment at your own risk.**
 
-This repository contains a Home Assistant component + platforms, for the awesome OpenMotics solution. 
+This repository contains a Home Assistant component + platforms, for the awesome OpenMotics solution.
 
 For the latest version of the OpenMotics Home Assistant Platform please use the master branch or better still install via HACS. if you want bleeding edge then checkout the dev branch, or look out for beta releases via HACS. Depending on what you choose you may need to use the Manual Code Installation described below.
 
@@ -117,7 +117,7 @@ Fill in the client_id and client_secret you have created in the first step.
 
 Depending on your installation, the modules should be added to your Home Assistant automatically within a few seconds till 10 minutes.
 
-# Run, Play 
+# Run, Play
 
 ***Run, Play*** and let us know if there are any bugs, enhancements etc via the github issues system
 

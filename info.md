@@ -1,6 +1,6 @@
 ## 💽 Version
-{% if version_installed == version_available %} 
-👍 You already have the latest released version installed. 
+{% if version_installed == version_available %}
+👍 You already have the latest released version installed.
 {% endif %}
 
 {% if installed and version_installed != selected_tag %}
@@ -27,7 +27,7 @@ Use hacs.io to manage the installation and update process. 🥳
 1. Click install.
 2. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "openmotics".
 
-## ⌨️ Manual installation 
+## ⌨️ Manual installation
 
 Copy content of `custom_components` folder into your HA `/config/custom_components` folder
 {% endif %}
