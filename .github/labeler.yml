@@ -1,0 +1,14 @@
+dependencies:
+  - any: ["poetry.lock"]
+    all: ["!**/*.py"]
+
+documentation:
+  - any: ["**/*.md"]
+    all: ["!**/*.py", "!.github/**/*"]
+
+github structure:
+  - any: [".github/**/*"]
+    all: ["!**/*.py"]
+
+translation:
+  - any: ["custom_components/openmotics/translations/*.json"]
