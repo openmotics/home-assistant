@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -12,13 +12,16 @@ from homeassistant.components.light import (
     COLOR_MODE_RGBW,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, NOT_IN_USE
-from .coordinator import OpenMoticsDataUpdateCoordinator
 from .entity import OpenMoticsDevice
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import OpenMoticsDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +37,7 @@ async def async_setup_entry(
     coordinator: OpenMoticsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     for index, om_light in enumerate(coordinator.data["outputs"]):
-        if om_light.name is None or om_light.name == "" or om_light.name == NOT_IN_USE:
+        if om_light.name is None or not om_light.name or om_light.name == NOT_IN_USE:
             continue
 
         # Outputs can contain outlets and lights, so filter out only the lights
@@ -42,7 +45,7 @@ async def async_setup_entry(
             entities.append(OpenMoticsOutputLight(coordinator, index, om_light))
 
     for index, om_light in enumerate(coordinator.data["lights"]):
-        if om_light.name is None or om_light.name == "" or om_light.name == NOT_IN_USE:
+        if om_light.name is None or not om_light.name or om_light.name == NOT_IN_USE:
             continue
 
         entities.append(OpenMoticsLight(coordinator, index, om_light))
@@ -51,15 +54,15 @@ async def async_setup_entry(
         _LOGGER.info("No OpenMotics Lights added")
         return
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
-def brightness_to_percentage(byt) -> float:
+def brightness_to_percentage(byt: int) -> float:
     """Convert brightness from absolute 0..255 to percentage."""
     return round((byt * 100.0) / 255.0)
 
 
-def brightness_from_percentage(percent) -> int:
+def brightness_from_percentage(percent: float) -> int:
     """Convert percentage to absolute value 0..255."""
     return round((percent * 255.0) / 100.0)
 
@@ -70,7 +73,10 @@ class OpenMoticsOutputLight(OpenMoticsDevice, LightEntity):
     coordinator: OpenMoticsDataUpdateCoordinator
 
     def __init__(
-        self, coordinator: OpenMoticsDataUpdateCoordinator, index, device
+        self,
+        coordinator: OpenMoticsDataUpdateCoordinator,
+        index: int,
+        device: dict[str, Any],
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator, index, device, "light")
@@ -91,7 +97,7 @@ class OpenMoticsOutputLight(OpenMoticsDevice, LightEntity):
             return None
 
     @property
-    def brightness(self) -> Any:
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         try:
             self._device = self.coordinator.data["outputs"][self.index]
@@ -130,9 +136,12 @@ class OpenMoticsOutputLight(OpenMoticsDevice, LightEntity):
         await self._update_state_from_result(result, False, None)
 
     async def _update_state_from_result(
-        self, result: Any, state: bool, brightness: int | None
+        self,
+        result: Any,
+        state: bool,
+        brightness: int | None,
     ) -> None:
-        if isinstance(result, dict) and result.get("success") is True:
+        if isinstance(result, dict) and result.get("_error") is None:
             self._device.status.on = state
             if brightness is not None:
                 self._device.status.value = brightness
@@ -148,7 +157,10 @@ class OpenMoticsLight(OpenMoticsDevice, LightEntity):
     coordinator: OpenMoticsDataUpdateCoordinator
 
     def __init__(
-        self, coordinator: OpenMoticsDataUpdateCoordinator, index, device
+        self,
+        coordinator: OpenMoticsDataUpdateCoordinator,
+        index: int,
+        device: dict[str, Any],
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator, index, device, "light")
@@ -177,7 +189,7 @@ class OpenMoticsLight(OpenMoticsDevice, LightEntity):
             return None
 
     @property
-    def brightness(self) -> Any:
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         try:
             self._device = self.coordinator.data["lights"][self.index]
@@ -216,9 +228,12 @@ class OpenMoticsLight(OpenMoticsDevice, LightEntity):
         await self._update_state_from_result(result, False, None)
 
     async def _update_state_from_result(
-        self, result: Any, state: bool, brightness: int | None
+        self,
+        result: Any,
+        state: bool,
+        brightness: int | None,
     ) -> None:
-        if isinstance(result, dict) and result.get("success") is True:
+        if isinstance(result, dict) and result.get("_error") is None:
             self._device.status.on = state
             if brightness is not None:
                 self._device.status.value = brightness

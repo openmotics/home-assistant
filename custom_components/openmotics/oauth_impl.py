@@ -1,5 +1,8 @@
-"""Local implementation of OAuth2 specific to OpenMotics to
-hard code client id and secret and return a proper name."""
+"""Local implementation of OAuth2.
+
+Local implementation of OAuth2 specific to OpenMotics to
+hard code client id and secret and return a proper name.
+"""
 
 import logging
 from typing import Any
@@ -12,9 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class OpenMoticsOauth2Implementation(LocalOAuth2Implementation):
-    """Local implementation of OAuth2 specific to OM to hard code
-    client id and secret and return a proper name.
-    """
+    """Local implementation of OAuth2."""
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -53,7 +54,7 @@ class OpenMoticsOauth2Implementation(LocalOAuth2Implementation):
         return await self._token_request(
             {
                 "grant_type": "client_credentials",
-            }
+            },
         )
 
     async def _async_refresh_token(self, token: dict) -> dict:
@@ -65,6 +66,6 @@ class OpenMoticsOauth2Implementation(LocalOAuth2Implementation):
                 "grant_type": "client_credentials",
                 # client_id and client_secret is added
                 # by _token_request
-            }
+            },
         )
         return {**token, **new_token}

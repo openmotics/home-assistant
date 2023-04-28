@@ -1,6 +1,6 @@
 # OpenMotics Home Assistant integration Beta
 
-**BETA WARNING: this Beta release contains a significant amount of changes to support Outputs, Lights, Scenes and Shutters for the OpenMotics Gateway. It equally uses v0.0.1 of the pyHAopenmotics API, which also contains a significant amount of changes.  It has been tested but may contain some bugs in existing or new functionality.  Use in your live environment at your own risk.**
+**BETA WARNING: this Beta release contains a significant amount of changes to support Outputs, Lights, Scenes and Shutters for the OpenMotics Gateway. It equally uses v0.0.1 of the pyHAopenmotics API, which also contains a significant amount of changes. It has been tested but may contain some bugs in existing or new functionality. Use in your live environment at your own risk.**
 
 This repository contains a Home Assistant component + platforms, for the awesome OpenMotics solution.
 
@@ -28,7 +28,7 @@ This custom component is developed for controlling an [OpenMotics](https://www.o
 
 ## Minimum Requirements
 
-Requires a minimum of HA 2022.03.  This is needed to support the new functionality and changes to config flow.
+Requires a minimum of HA 2022.03. This is needed to support the new functionality and changes to config flow.
 Requires the new pyHAopenmotics v0.0.1 (or newer) sdk.
 
 ## HOW TO INSTALL
@@ -91,10 +91,9 @@ Option 1: HACS installation
 
 ![install](/pictures/hacs_download_repository.png)
 
-Option 2:  Manual Code Installation
+Option 2: Manual Code Installation
 
 This method is best used when you want to play with the "latest and greatest" from the repository. Moving forward, the github repository will contain two primary branches, **master** and dev. Master is the latest released, and hopefully most stable branch, whereas **dev** is the branch that we're currently working on.
-
 
 1. Download the [openmotics-home-assistant repo](https://github.com/openmotics/home-assistant).
 2. Unzip it and copy the `custom_components/openmotics` folder to the Home Assistant configuration directory, for example `~/.homeassistant`.
@@ -119,7 +118,7 @@ Depending on your installation, the modules should be added to your Home Assista
 
 # Run, Play
 
-***Run, Play*** and let us know if there are any bugs, enhancements etc via the github issues system
+**_Run, Play_** and let us know if there are any bugs, enhancements etc via the github issues system
 
 This plugin is a community effort and OpenMotics cannot give any warranties even though you can report any issues and we'll help as much as possible. Pull requests are always welcome.
 
@@ -129,4 +128,4 @@ This project is licensed under the AGPLv3 License - see the [LICENSE.md](LICENSE
 
 # Acknowledgments
 
-* Special thanks to @woutercoppens for making this plugin and donating it to OpenMotics.
+- Special thanks to @woutercoppens for making this plugin and donating it to OpenMotics.

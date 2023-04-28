@@ -1,6 +1,7 @@
 """Constants for weenect tests."""
 from typing import Any
 
+from custom_components.openmotics.const import CONF_INSTALLATION_ID
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -10,8 +11,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_VERIFY_SSL,
 )
-
-from custom_components.openmotics.const import CONF_INSTALLATION_ID
 
 # Mock config data to be used across multiple tests
 CLOUD_MOCK_CONFIG: dict[str, Any] = {

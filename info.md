@@ -1,10 +1,11 @@
 ## 💽 Version
+
 {% if version_installed == version_available %}
 👍 You already have the latest released version installed.
 {% endif %}
 
 {% if installed and version_installed != selected_tag %}
- 🤓 Changes from version {{ version_installed }}
+🤓 Changes from version {{ version_installed }}
 {% endif %}
 
 <h2 align="center">
@@ -21,9 +22,11 @@ _Component to integrate with [integration_blueprint][integration_blueprint]._
 This integration allows visibility and control of the OpenMotics system in Home Assistant. For information about how to configure and the features included in the integration, please see the [Readme.md](https://github.com/openmotics/home-assistant/blob/master/README.md)
 
 {% if not installed %}
+
 ## ⚙️ Installation & ♻️ Update
 
 Use hacs.io to manage the installation and update process. 🥳
+
 1. Click install.
 2. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "openmotics".
 

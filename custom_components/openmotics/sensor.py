@@ -3,14 +3,13 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -22,12 +21,17 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, NOT_IN_USE
-from .coordinator import OpenMoticsDataUpdateCoordinator
 from .entity import OpenMoticsDevice
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import OpenMoticsDataUpdateCoordinator
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,11 +50,7 @@ async def async_setup_entry(
     coordinator: OpenMoticsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     for index, om_sensor in enumerate(coordinator.data["sensors"]):
-        if (
-            om_sensor.name is None
-            or om_sensor.name == ""
-            or om_sensor.name == NOT_IN_USE
-        ):
+        if om_sensor.name is None or not om_sensor.name or om_sensor.name == NOT_IN_USE:
             continue
 
         if om_sensor.physical_quantity == "temperature":
@@ -63,11 +63,7 @@ async def async_setup_entry(
             entities.append(OpenMoticsBrightness(coordinator, index, om_sensor))
 
     for index, om_sensor in enumerate(coordinator.data["energysensors"]):
-        if (
-            om_sensor.name is None
-            or om_sensor.name == ""
-            or om_sensor.name == NOT_IN_USE
-        ):
+        if om_sensor.name is None or not om_sensor.name or om_sensor.name == NOT_IN_USE:
             continue
 
         entities.append(OpenMoticsVoltage(coordinator, index, om_sensor))
@@ -90,9 +86,9 @@ class OpenMoticsSensor(OpenMoticsDevice, SensorEntity):
     def __init__(
         self,
         coordinator: OpenMoticsDataUpdateCoordinator,
-        index,
-        device,
-    ):
+        index: int,
+        device: dict[str, Any],
+    ) -> None:
         """Initialize the light."""
         super().__init__(coordinator, index, device, "sensor")
 
@@ -106,7 +102,7 @@ class OpenMoticsTemperature(OpenMoticsSensor):
     _device_class = DEVICE_CLASS_TEMPERATURE
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return % chance the aurora is visible."""
         try:
             self._device = self.coordinator.data["sensors"][self.index]
@@ -122,7 +118,7 @@ class OpenMoticsHumidity(OpenMoticsSensor):
     _device_class = DEVICE_CLASS_HUMIDITY
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return % chance the aurora is visible."""
         try:
             self._device = self.coordinator.data["sensors"][self.index]
@@ -138,7 +134,7 @@ class OpenMoticsBrightness(OpenMoticsSensor):
     _device_class = DEVICE_CLASS_ILLUMINANCE
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return % chance the aurora is visible."""
         try:
             self._device = self.coordinator.data["sensors"][self.index]
@@ -152,10 +148,12 @@ class OpenMoticsEnergySensor(OpenMoticsSensor):
 
     @dataclass
     class WrappedDevice:
+        """Representation of a OpenMotics energy sensor."""
+
         idx: str
         local_id: int
         name: str
-        device: Any
+        device: dict[str, Any]
 
     _attr_state_class = SensorStateClass.MEASUREMENT
     _device_class: SensorDeviceClass
@@ -163,9 +161,10 @@ class OpenMoticsEnergySensor(OpenMoticsSensor):
     def __init__(
         self,
         coordinator: OpenMoticsDataUpdateCoordinator,
-        index,
-        device,
-    ):
+        index: int,
+        device: dict[str, Any],
+    ) -> None:
+        """Representation of a OpenMotics energy sensor."""
         self._energy_index = index
         super().__init__(
             coordinator,
@@ -187,7 +186,7 @@ class OpenMoticsVoltage(OpenMoticsEnergySensor):
     _attr_icon = "mdi:flash-outline"
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return % chance the aurora is visible."""
         try:
             self._device = self.coordinator.data["energysensors"][self.index]
@@ -204,7 +203,7 @@ class OpenMoticsFrequency(OpenMoticsEnergySensor):
     _attr_icon = "mdi:sine-wave"
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return % chance the aurora is visible."""
         try:
             self._device = self.coordinator.data["energysensors"][self.index]
@@ -221,7 +220,7 @@ class OpenMoticsCurrent(OpenMoticsEnergySensor):
     _attr_icon = "mdi:current-ac"
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return % chance the aurora is visible."""
         try:
             self._device = self.coordinator.data["energysensors"][self.index]
@@ -238,7 +237,7 @@ class OpenMoticsPower(OpenMoticsEnergySensor):
     _attr_icon = "mdi:flash-outline"
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return % chance the aurora is visible."""
         try:
             self._device = self.coordinator.data["energysensors"][self.index]
