@@ -25,7 +25,7 @@ pytest_plugins = "pytest_homeassistant_custom_component"
 # Remove to enable selective use of this fixture
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
-    yield
+    return
 
 
 # This fixture is used to prevent HomeAssistant from attempting to create and dismiss persistent
@@ -35,7 +35,7 @@ def auto_enable_custom_integrations(enable_custom_integrations):
 def skip_notifications_fixture():
     """Skip notification calls."""
     with patch("homeassistant.components.persistent_notification.async_create"), patch(
-        "homeassistant.components.persistent_notification.async_dismiss"
+        "homeassistant.components.persistent_notification.async_dismiss",
     ):
         yield
 

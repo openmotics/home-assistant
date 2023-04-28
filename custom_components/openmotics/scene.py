@@ -2,16 +2,20 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.scene import Scene
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, NOT_IN_USE
-from .coordinator import OpenMoticsDataUpdateCoordinator
 from .entity import OpenMoticsDevice
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import OpenMoticsDataUpdateCoordinator
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +31,7 @@ async def async_setup_entry(
     coordinator: OpenMoticsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     for index, om_scene in enumerate(coordinator.data["groupactions"]):
-        if om_scene.name is None or om_scene.name == "" or om_scene.name == NOT_IN_USE:
+        if om_scene.name is None or not om_scene.name or om_scene.name == NOT_IN_USE:
             continue
         entities.append(OpenMoticsScene(coordinator, index, om_scene))
 
@@ -43,7 +47,12 @@ class OpenMoticsScene(OpenMoticsDevice, Scene):
 
     coordinator: OpenMoticsDataUpdateCoordinator
 
-    def __init__(self, coordinator: OpenMoticsDataUpdateCoordinator, index, om_scene):
+    def __init__(
+        self,
+        coordinator: OpenMoticsDataUpdateCoordinator,
+        index: int,
+        om_scene: dict[str, Any],
+    ) -> None:
         """Initialize the scene."""
         super().__init__(coordinator, index, om_scene, "scene")
 

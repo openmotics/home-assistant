@@ -1,13 +1,15 @@
 """Generic OpenMoticDevice Entity."""
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import OpenMoticsDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from .coordinator import OpenMoticsDataUpdateCoordinator
 
 
 class OpenMoticsDevice(CoordinatorEntity):
@@ -19,7 +21,7 @@ class OpenMoticsDevice(CoordinatorEntity):
         self,
         coordinator: OpenMoticsDataUpdateCoordinator,
         index: str,
-        device,
+        device: dict[str, Any],
         device_type: str,
     ) -> None:
         """Initialize the device."""
@@ -94,6 +96,6 @@ class OpenMoticsDevice(CoordinatorEntity):
         return self._type
 
     @property
-    def install_id(self):
+    def install_id(self) -> Any:
         """Return the installation ID."""
         return self._install_id

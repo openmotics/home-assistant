@@ -1,8 +1,4 @@
 """Tests for `aioweenect.aioweenect`."""
-import json
-import os
-import socket
-from typing import Any
 
 import aiohttp
 import pytest
@@ -13,8 +9,8 @@ API_HOST = "apiv4.weenect.com"
 API_VERSION = "/v4"
 
 
-@pytest.mark.enable_socket
-@pytest.mark.asyncio
+@pytest.mark.enable_socket()
+@pytest.mark.asyncio()
 async def test_get_installations_with_invalid_token(aresponses):
     """Test getting installations with a timed out token."""
     aresponses.add(
@@ -32,7 +28,8 @@ async def test_get_installations_with_invalid_token(aresponses):
     )
     async with aiohttp.ClientSession() as session:
         omclient = OpenMoticsCloud(
-            token="eyJ0eXAiOiJKV1NiLCJhbGciOiJIUzI1NiJ9", session=session
+            token="eyJ0eXAiOiJKV1NiLCJhbGciOiJIUzI1NiJ9",
+            session=session,
         )
         response = await omclient.installations.get_all()
 

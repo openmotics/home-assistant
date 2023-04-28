@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Union
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import (
     CONF_IP_ADDRESS,
@@ -11,9 +11,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from pyhaopenmotics import (
     LocalGateway,
@@ -23,6 +21,10 @@ from pyhaopenmotics import (
 )
 
 from .const import CONF_INSTALLATION_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +41,7 @@ class OpenMoticsDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self.session = None
-        self._omclient: Union[OpenMoticsCloud, LocalGateway]
+        self._omclient: OpenMoticsCloud | LocalGateway
         self._install_id = None
 
     async def _async_update_data(self) -> dict[Any, Any]:
@@ -48,7 +50,6 @@ class OpenMoticsDataUpdateCoordinator(DataUpdateCoordinator):
         This is the place to pre-process the data to lookup tables
         so entities can quickly look up their data.
         """
-
         try:
             my_outputs = await self._omclient.outputs.get_all()
             my_lights = await self._omclient.lights.get_all()
