@@ -36,7 +36,7 @@ black = "23.3.0"
 pre-commit = "3.2.1"
 pre-commit-hooks = "4.4.0"
 ruff = "0.0.263"
-pylint = "2.17.1"
+pylint = "2.17.3"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
