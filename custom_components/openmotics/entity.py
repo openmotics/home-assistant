@@ -47,8 +47,6 @@ class OpenMoticsDevice(CoordinatorEntity):
             identifiers={(DOMAIN, self.unique_id)},
             name=self.name,
             model=self._type,
-            id=self._idx,
-            installation=self._install_id,
             manufacturer="OpenMotics",
         )
 
