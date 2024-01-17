@@ -11,15 +11,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    FREQUENCY_HERTZ,
+    LIGHT_LUX,
     PERCENTAGE,
-    POWER_WATT,
-    TEMP_CELSIUS,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfFrequency,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 
 from .const import DOMAIN, NOT_IN_USE
@@ -98,8 +96,8 @@ class OpenMoticsSensor(OpenMoticsDevice, SensorEntity):
 class OpenMoticsTemperature(OpenMoticsSensor):
     """Representation of a OpenMotics temperature sensor."""
 
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
-    _device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
     def native_value(self) -> float | None:
@@ -114,8 +112,8 @@ class OpenMoticsTemperature(OpenMoticsSensor):
 class OpenMoticsHumidity(OpenMoticsSensor):
     """Representation of a OpenMotics humidity sensor."""
 
+    _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_native_unit_of_measurement = PERCENTAGE
-    _device_class = DEVICE_CLASS_HUMIDITY
 
     @property
     def native_value(self) -> float | None:
@@ -130,8 +128,10 @@ class OpenMoticsHumidity(OpenMoticsSensor):
 class OpenMoticsBrightness(OpenMoticsSensor):
     """Representation of a OpenMotics humidity sensor."""
 
-    _native_unit_of_measurement = PERCENTAGE
-    _device_class = DEVICE_CLASS_ILLUMINANCE
+    _attr_device_class = SensorDeviceClass.ILLUMINANCE
+    #_attr_native_unit_of_measurement = LIGHT_LUX
+    # TODO: convert percentage to flux
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     @property
     def native_value(self) -> float | None:
@@ -150,7 +150,7 @@ class OpenMoticsEnergySensor(OpenMoticsSensor):
     class WrappedDevice:
         """Representation of a OpenMotics energy sensor."""
 
-        idx: str
+        idx: int
         local_id: int
         name: str
         device: dict[str, Any]
@@ -181,8 +181,8 @@ class OpenMoticsEnergySensor(OpenMoticsSensor):
 class OpenMoticsVoltage(OpenMoticsEnergySensor):
     """Representation of a OpenMotics voltage sensor."""
 
-    _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
-    _device_class = SensorDeviceClass.VOLTAGE
+    _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
+    _attr_device_class = SensorDeviceClass.VOLTAGE
     _attr_icon = "mdi:flash-outline"
 
     @property
@@ -198,8 +198,8 @@ class OpenMoticsVoltage(OpenMoticsEnergySensor):
 class OpenMoticsFrequency(OpenMoticsEnergySensor):
     """Representation of a OpenMotics frequency sensor."""
 
-    _attr_native_unit_of_measurement = FREQUENCY_HERTZ
-    _device_class = SensorDeviceClass.FREQUENCY
+    _attr_native_unit_of_measurement = UnitOfFrequency.HERTZ
+    _attr_device_class = SensorDeviceClass.FREQUENCY
     _attr_icon = "mdi:sine-wave"
 
     @property
@@ -215,8 +215,8 @@ class OpenMoticsFrequency(OpenMoticsEnergySensor):
 class OpenMoticsCurrent(OpenMoticsEnergySensor):
     """Representation of a OpenMotics current sensor."""
 
-    _attr_native_unit_of_measurement = ELECTRIC_CURRENT_AMPERE
-    _device_class = SensorDeviceClass.CURRENT
+    _attr_native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.CURRENT
     _attr_icon = "mdi:current-ac"
 
     @property
@@ -232,8 +232,8 @@ class OpenMoticsCurrent(OpenMoticsEnergySensor):
 class OpenMoticsPower(OpenMoticsEnergySensor):
     """Representation of a OpenMotics power sensor."""
 
-    _attr_native_unit_of_measurement = POWER_WATT
-    _device_class = SensorDeviceClass.POWER
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
     _attr_icon = "mdi:flash-outline"
 
     @property
