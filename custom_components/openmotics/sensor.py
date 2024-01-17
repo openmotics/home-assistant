@@ -129,7 +129,7 @@ class OpenMoticsBrightness(OpenMoticsSensor):
     """Representation of a OpenMotics humidity sensor."""
 
     _attr_device_class = SensorDeviceClass.ILLUMINANCE
-    #_attr_native_unit_of_measurement = LIGHT_LUX
+    # _attr_native_unit_of_measurement = LIGHT_LUX
     # TODO: convert percentage to flux
     _attr_native_unit_of_measurement = PERCENTAGE
 
