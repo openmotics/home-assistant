@@ -101,7 +101,7 @@ class OpenMoticsOutputLight(OpenMoticsDevice, LightEntity):
         """Return the brightness of this light between 0..255."""
         try:
             self._device = self.coordinator.data["outputs"][self.index]
-            return self._device.status.value
+            return brightness_from_percentage(self._device.status.value)
         except (AttributeError, KeyError):
             return None
 
@@ -193,7 +193,7 @@ class OpenMoticsLight(OpenMoticsDevice, LightEntity):
         """Return the brightness of this light between 0..255."""
         try:
             self._device = self.coordinator.data["lights"][self.index]
-            return self._device.status.value
+            return brightness_from_percentage(self._device.status.value)
         except (AttributeError, KeyError):
             return None
 
