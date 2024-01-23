@@ -153,8 +153,8 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
     ) -> None:
         pass
 
-    # @property
-    # def preset_mode(self) -> str:
+    @property
+    def preset_mode(self) -> str:
     #     """Return the current preset mode, e.g., home, away, temp."""
     #     if self.device.status.preset == "AUTO":
     #         return HVACMode.AUTO
@@ -164,6 +164,8 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
     #         return HVACMode.AUTO
     #     if self.device.status.preset == "VACATION":
     #         return HVACMode.AUTO
+
+        return "auto"
 
 
 
