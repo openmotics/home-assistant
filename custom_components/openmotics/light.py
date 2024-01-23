@@ -4,8 +4,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.light import (ATTR_BRIGHTNESS, ColorMode,
-                                            LightEntity)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 
 from .const import DOMAIN, NOT_IN_USE
 from .entity import OpenMoticsDevice

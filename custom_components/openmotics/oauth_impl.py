@@ -3,12 +3,14 @@
 Local implementation of OAuth2 specific to OpenMotics to
 hard code client id and secret and return a proper name.
 """
+from __future__ import annotations
 
 import logging
 from typing import Any
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_entry_oauth2_flow import LocalOAuth2Implementation
+from homeassistant.helpers.config_entry_oauth2_flow import \
+    LocalOAuth2Implementation
 from pyhaopenmotics.const import CLOUD_SCOPE, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
