@@ -4,7 +4,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import (ATTR_BRIGHTNESS, ColorMode,
+                                            LightEntity)
 
 from .const import DOMAIN, NOT_IN_USE
 from .entity import OpenMoticsDevice
@@ -141,7 +142,7 @@ class OpenMoticsOutputLight(OpenMoticsDevice, LightEntity):
         if isinstance(result, dict) and result.get("_error") is None:
             self._device.status.on = state
             if brightness is not None:
-                self._device.status.value = brightness
+                self._device.status.value = brightness_to_percentage(brightness)
             self.async_write_ha_state()
         else:
             _LOGGER.debug("Invalid result, refreshing all")
@@ -232,7 +233,7 @@ class OpenMoticsLight(OpenMoticsDevice, LightEntity):
         if isinstance(result, dict) and result.get("_error") is None:
             self._device.status.on = state
             if brightness is not None:
-                self._device.status.value = brightness
+                self._device.status.value = brightness_to_percentage(brightness)
             self.async_write_ha_state()
         else:
             _LOGGER.debug("Invalid result, refreshing all")
