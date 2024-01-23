@@ -4,11 +4,15 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.light import (ATTR_BRIGHTNESS,
-                                            COLOR_MODE_BRIGHTNESS,
-                                            COLOR_MODE_COLOR_TEMP,
-                                            COLOR_MODE_HS, COLOR_MODE_RGBW,
-                                            ColorMode, LightEntity)
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
+    COLOR_MODE_RGBW,
+    ColorMode,
+    LightEntity,
+)
 
 from .const import DOMAIN, NOT_IN_USE
 from .entity import OpenMoticsDevice
@@ -113,9 +117,7 @@ class OpenMoticsOutputLight(OpenMoticsDevice, LightEntity):
             "kwargs: %s",
             kwargs,
         )
-        if (
-            brightness := kwargs.get(ATTR_BRIGHTNESS)
-        ) is not None:
+        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             # Openmotics brightness (value) is between 0..100
             _LOGGER.debug(
                 "Turning on light: %s brightness %s",
