@@ -20,7 +20,7 @@ class OpenMoticsDevice(CoordinatorEntity):
     def __init__(
         self,
         coordinator: OpenMoticsDataUpdateCoordinator,
-        index: str,
+        index: int,
         device: dict[str, Any],
         device_type: str,
     ) -> None:

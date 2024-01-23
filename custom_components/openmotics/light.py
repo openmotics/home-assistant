@@ -4,14 +4,11 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_RGBW,
-    LightEntity,
-)
+from homeassistant.components.light import (ATTR_BRIGHTNESS,
+                                            COLOR_MODE_BRIGHTNESS,
+                                            COLOR_MODE_COLOR_TEMP,
+                                            COLOR_MODE_HS, COLOR_MODE_RGBW,
+                                            LightEntity)
 
 from .const import DOMAIN, NOT_IN_USE
 from .entity import OpenMoticsDevice
@@ -57,14 +54,14 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-def brightness_to_percentage(byt: int) -> float:
+def brightness_to_percentage(byt: int) -> int:
     """Convert brightness from absolute 0..255 to percentage."""
-    return round((byt * 100.0) / 255.0)
+    return min(max(int(round(byt * 100 / 255, 0)), 0), 100)
 
 
 def brightness_from_percentage(percent: float) -> int:
     """Convert percentage to absolute value 0..255."""
-    return round((percent * 255.0) / 100.0)
+    return min(max(int(round(percent * 255 / 100, 0)), 0), 255)
 
 
 class OpenMoticsOutputLight(OpenMoticsDevice, LightEntity):
@@ -107,8 +104,15 @@ class OpenMoticsOutputLight(OpenMoticsDevice, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness is not None:
+        # brightness = kwargs.get(ATTR_BRIGHTNESS)
+        # if brightness is not None:
+        _LOGGER.debug(
+            "kwargs: %s",
+            kwargs,
+        )
+        if (
+            brightness := kwargs.get(ATTR_BRIGHTNESS)
+        ) is not None:
             # Openmotics brightness (value) is between 0..100
             _LOGGER.debug(
                 "Turning on light: %s brightness %s",
