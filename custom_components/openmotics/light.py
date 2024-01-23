@@ -4,8 +4,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.light import (ATTR_BRIGHTNESS, ColorMode,
-                                            LightEntity)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 
 from .const import DOMAIN, NOT_IN_USE
 from .entity import OpenMoticsDevice
@@ -106,10 +105,6 @@ class OpenMoticsOutputLight(OpenMoticsDevice, LightEntity):
         """Turn device on."""
         # brightness = kwargs.get(ATTR_BRIGHTNESS)
         # if brightness is not None:
-        _LOGGER.debug(
-            "kwargs: %s",
-            kwargs,
-        )
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             # Openmotics brightness (value) is between 0..100
             _LOGGER.debug(
@@ -167,7 +162,6 @@ class OpenMoticsLight(OpenMoticsDevice, LightEntity):
         """Initialize the light."""
         super().__init__(coordinator, index, device, "light")
 
-
         if "RANGE" in device.capabilities:
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
             self._attr_color_mode = ColorMode.BRIGHTNESS
@@ -202,8 +196,7 @@ class OpenMoticsLight(OpenMoticsDevice, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness is not None:
+        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             # Openmotics brightness (value) is between 0..100
             _LOGGER.debug(
                 "Turning on light: %s brightness %s",
