@@ -3,6 +3,7 @@
 Local implementation of OAuth2 specific to OpenMotics to
 hard code client id and secret and return a proper name.
 """
+from __future__ import annotations
 
 import logging
 from typing import Any

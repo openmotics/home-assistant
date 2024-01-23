@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    LIGHT_LUX,
     PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,

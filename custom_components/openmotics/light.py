@@ -4,14 +4,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_RGBW,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 
 from .const import DOMAIN, NOT_IN_USE
 from .entity import OpenMoticsDevice
@@ -57,14 +50,14 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-def brightness_to_percentage(byt: int) -> float:
+def brightness_to_percentage(byt: int) -> int:
     """Convert brightness from absolute 0..255 to percentage."""
-    return round((byt * 100.0) / 255.0)
+    return min(max(int(round(byt * 100 / 255, 0)), 0), 100)
 
 
 def brightness_from_percentage(percent: float) -> int:
     """Convert percentage to absolute value 0..255."""
-    return round((percent * 255.0) / 100.0)
+    return min(max(int(round(percent * 255 / 100, 0)), 0), 255)
 
 
 class OpenMoticsOutputLight(OpenMoticsDevice, LightEntity):
@@ -81,11 +74,14 @@ class OpenMoticsOutputLight(OpenMoticsDevice, LightEntity):
         """Initialize the light."""
         super().__init__(coordinator, index, device, "light")
 
-        self._attr_supported_color_modes = set()
+        # self._attr_supported_color_modes = set()
 
         if "RANGE" in device.capabilities:
-            self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
-            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+        else:
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
+            self._attr_color_mode = ColorMode.ONOFF
 
     @property
     def is_on(self) -> Any:
@@ -107,8 +103,9 @@ class OpenMoticsOutputLight(OpenMoticsDevice, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness is not None:
+        # brightness = kwargs.get(ATTR_BRIGHTNESS)
+        # if brightness is not None:
+        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             # Openmotics brightness (value) is between 0..100
             _LOGGER.debug(
                 "Turning on light: %s brightness %s",
@@ -144,7 +141,7 @@ class OpenMoticsOutputLight(OpenMoticsDevice, LightEntity):
         if isinstance(result, dict) and result.get("_error") is None:
             self._device.status.on = state
             if brightness is not None:
-                self._device.status.value = brightness
+                self._device.status.value = brightness_to_percentage(brightness)
             self.async_write_ha_state()
         else:
             _LOGGER.debug("Invalid result, refreshing all")
@@ -165,19 +162,19 @@ class OpenMoticsLight(OpenMoticsDevice, LightEntity):
         """Initialize the light."""
         super().__init__(coordinator, index, device, "light")
 
-        self._attr_supported_color_modes = set()
-
         if "RANGE" in device.capabilities:
-            self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
-            # Default: Brightness (no color)
-            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+        else:
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
+            self._attr_color_mode = ColorMode.ONOFF
 
         if "WHITE_TEMP" in device.capabilities:
-            self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
-            self._attr_supported_color_modes.add(COLOR_MODE_HS)
+            self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
+            self._attr_supported_color_modes.add(ColorMode.HS)
 
         if "FULL_COLOR" in device.capabilities:
-            self._attr_supported_color_modes.add(COLOR_MODE_RGBW)
+            self._attr_supported_color_modes.add(ColorMode.RGBWW)
 
     @property
     def is_on(self) -> Any:
@@ -199,8 +196,7 @@ class OpenMoticsLight(OpenMoticsDevice, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness is not None:
+        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             # Openmotics brightness (value) is between 0..100
             _LOGGER.debug(
                 "Turning on light: %s brightness %s",
@@ -236,7 +232,7 @@ class OpenMoticsLight(OpenMoticsDevice, LightEntity):
         if isinstance(result, dict) and result.get("_error") is None:
             self._device.status.on = state
             if brightness is not None:
-                self._device.status.value = brightness
+                self._device.status.value = brightness_to_percentage(brightness)
             self.async_write_ha_state()
         else:
             _LOGGER.debug("Invalid result, refreshing all")
