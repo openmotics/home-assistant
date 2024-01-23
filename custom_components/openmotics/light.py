@@ -4,15 +4,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_RGBW,
-    ColorMode,
-    LightEntity,
-)
+from homeassistant.components.light import (ATTR_BRIGHTNESS, ColorMode,
+                                            LightEntity)
 
 from .const import DOMAIN, NOT_IN_USE
 from .entity import OpenMoticsDevice
@@ -82,7 +75,7 @@ class OpenMoticsOutputLight(OpenMoticsDevice, LightEntity):
         """Initialize the light."""
         super().__init__(coordinator, index, device, "light")
 
-        self._attr_supported_color_modes = set()
+        # self._attr_supported_color_modes = set()
 
         if "RANGE" in device.capabilities:
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
@@ -174,19 +167,20 @@ class OpenMoticsLight(OpenMoticsDevice, LightEntity):
         """Initialize the light."""
         super().__init__(coordinator, index, device, "light")
 
-        self._attr_supported_color_modes = set()
 
         if "RANGE" in device.capabilities:
-            self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
-            # Default: Brightness (no color)
-            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+        else:
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
+            self._attr_color_mode = ColorMode.ONOFF
 
         if "WHITE_TEMP" in device.capabilities:
-            self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
-            self._attr_supported_color_modes.add(COLOR_MODE_HS)
+            self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
+            self._attr_supported_color_modes.add(ColorMode.HS)
 
         if "FULL_COLOR" in device.capabilities:
-            self._attr_supported_color_modes.add(COLOR_MODE_RGBW)
+            self._attr_supported_color_modes.add(ColorMode.RGBWW)
 
     @property
     def is_on(self) -> Any:
