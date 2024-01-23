@@ -24,7 +24,8 @@ ENV_LOCAL = "local"
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 PLATFORMS = [
-    # Platform.BINARY_SENSOR,
+    # Platform.BINARY_SENSORa
+    Platform.CLIMATE,
     Platform.SWITCH,
     Platform.COVER,
     Platform.LIGHT,

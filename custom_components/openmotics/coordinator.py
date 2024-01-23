@@ -4,21 +4,12 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.const import (
-    CONF_IP_ADDRESS,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import (CONF_IP_ADDRESS, CONF_NAME, CONF_PASSWORD,
+                                 CONF_PORT, CONF_VERIFY_SSL)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from pyhaopenmotics import (
-    LocalGateway,
-    OpenMoticsCloud,
-    OpenMoticsError,
-    get_ssl_context,
-)
+from pyhaopenmotics import (LocalGateway, OpenMoticsCloud, OpenMoticsError,
+                            get_ssl_context)
 
 from .const import CONF_INSTALLATION_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
 
@@ -56,6 +47,8 @@ class OpenMoticsDataUpdateCoordinator(DataUpdateCoordinator):
             my_groupactions = await self._omclient.groupactions.get_all()
             my_shutters = await self._omclient.shutters.get_all()
             my_sensors = await self._omclient.sensors.get_all()
+            my_thermostatgroups = await self._omclient.thermostats.groups.get_all()
+            my_thermostatunits = await self._omclient.thermostats.units.get_all()
             if hasattr(self._omclient, "energysensors"):
                 my_energysensors = await self._omclient.energysensors.get_all()
             else:
@@ -71,6 +64,8 @@ class OpenMoticsDataUpdateCoordinator(DataUpdateCoordinator):
                 "shutters": [],
                 "sensors": [],
                 "energysensors": [],
+                "thermostatgroups": [],
+                "thermostatunits": [],
             }
         # Store data in a way Home Assistant can easily consume it
         return {
@@ -80,6 +75,8 @@ class OpenMoticsDataUpdateCoordinator(DataUpdateCoordinator):
             "shutters": my_shutters,
             "sensors": my_sensors,
             "energysensors": my_energysensors,
+            "thermostatgroups": my_thermostatgroups,
+            "thermostatunits": my_thermostatunits,
         }
 
     @property
