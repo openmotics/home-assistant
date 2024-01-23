@@ -21,7 +21,6 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -67,7 +66,14 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
     coordinator: OpenMoticsDataUpdateCoordinator
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+    )
+
+    # Both min and max temp values have been retrieved from the Somfy Application.
+    _attr_min_temp = 15.0
+    _attr_max_temp = 26.0
+
 
     def __init__(
         self,
@@ -146,6 +152,21 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
         other: int | None = None,
     ) -> None:
         pass
+
+    # @property
+    # def preset_mode(self) -> str:
+    #     """Return the current preset mode, e.g., home, away, temp."""
+    #     if self.device.status.preset == "AUTO":
+    #         return HVACMode.AUTO
+    #     if self.device.status.preset == "AWAY":
+    #         return PRESET_AWAY
+    #     if self.device.status.preset == "PARTY":
+    #         return HVACMode.AUTO
+    #     if self.device.status.preset == "VACATION":
+    #         return HVACMode.AUTO
+
+
+
 
     # if isinstance(result, dict) and result.get("_error") is None:
     #      if temperature is not None:
