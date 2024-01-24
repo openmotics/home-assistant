@@ -4,15 +4,25 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.climate import (ATTR_HVAC_MODE, PRESET_ACTIVITY,
-                                              PRESET_AWAY, PRESET_ECO,
-                                              PRESET_HOME, ClimateEntity,
-                                              ClimateEntityFeature, HVACAction,
-                                              HVACMode)
+from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
+    PRESET_AWAY,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
-from .const import DOMAIN, NOT_IN_USE
+from .const import (
+    DOMAIN,
+    NOT_IN_USE,
+    PRESET_AUTO,
+    PRESET_MANUAL,
+    PRESET_PARTY,
+    PRESET_VACATION,
+)
 from .entity import OpenMoticsDevice
 
 if TYPE_CHECKING:
@@ -41,10 +51,11 @@ HVAC_ACTIONS: dict[str, HVACAction] = {
 HVAC_ACTIONS_INVERTED = {v: k for k, v in HVAC_ACTIONS.items()}
 
 PRESET_MODES: dict[str, str] = {
-    "AUTO": PRESET_HOME,
+    "AUTO": PRESET_AUTO,
     "AWAY": PRESET_AWAY,
-    "PARTY": PRESET_ACTIVITY,
-    "VACATION": PRESET_ECO,
+    "PARTY": PRESET_PARTY,
+    "MANUAL": PRESET_MANUAL,
+    "VACATION": PRESET_VACATION,
 }
 PRESET_MODES_INVERTED = {v: k for k, v in PRESET_MODES.items()}
 
@@ -55,6 +66,7 @@ PRESET_MODES_INVERTED = {v: k for k, v in PRESET_MODES.items()}
 #     HVACMode.HEAT: "mdi:white-balance-sunny",
 #     HVACMode.HEAT_COOL: "mdi:cached",
 # }
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -102,14 +114,14 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
-        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+        ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
         # ClimateEntityFeature.TARGET_TEMPERATURE
     )
 
     # OpenMotics thermostats go from 6 to 32 degress
     _attr_min_temp = 6.0
     _attr_max_temp = 32.0
-
 
     def __init__(
         self,
@@ -135,7 +147,6 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
         # Preset modes
         self._attr_preset_modes = list(PRESET_MODES.keys())
 
-
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
@@ -146,20 +157,18 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
         #     return HVACMode.HEAT
         # if self.device.status.mode == "COOLING":
         #     return HVACMode.COOL
-        if (
-            state := self.device.status.mode
-        ) and state.value_as_str:
-            return HVAC_MODES[state.value_as_str]
+        if state := self.device.status.mode:
+            return HVAC_MODES[state]
 
         return HVACMode.OFF
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         _LOGGER.debug(
-                "Setting thermostat: %s to mode %s",
-                self.device_id,
-                hvac_mode,
-            )
+            "Setting thermostat: %s to mode %s",
+            self.device_id,
+            hvac_mode,
+        )
         # if hvac_mode == HVACMode.ON:
         #     await self.coordinator.omclient.thermostats.units.set_state(
         #         self.device_id,
@@ -180,25 +189,23 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
             await self.coordinator.omclient.thermostats.groups.set_mode(
                 self.device_id,
                 HVAC_MODES_INVERTED[hvac_mode],
-             )
+            )
             return
 
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
-        if (
-            current_action := self.device.status.mode
-        ) and current_action.value_as_str:
-            return HVAC_ACTIONS[current_action.value_as_str]
+        if current_action := self.device.status.mode:
+            return HVAC_ACTIONS[current_action]
 
         return None
 
     @property
-    def current_temperature(self) -> int | None:
+    def current_temperature(self) -> int:
         """Return current temperature."""
         return self.device.status.current_temperature
 
-        return None
+        # return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -208,10 +215,10 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         _LOGGER.debug(
-                "Setting thermostat: %s to temperature %s",
-                self.device_id,
-                temperature,
-            )
+            "Setting thermostat: %s to temperature %s",
+            self.device_id,
+            temperature,
+        )
         result = await self.coordinator.omclient.thermostats.units.set_temperature(
             self.device_id,
             temperature,  # value
@@ -223,7 +230,6 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
         """Return the temperature we try to reach."""
         return self.device.status.setpoint
 
-
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         om_preset_mode = PRESET_MODES_INVERTED[preset_mode]
@@ -233,16 +239,12 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
         )
         await self._update_state_from_result(result, preset_mode=om_preset_mode)
 
-
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        if (
-            om_preset_mode := self.device.status.preset
-        ) and om_preset_mode.value_as_str:
-            return PRESET_MODES[om_preset_mode.value_as_str]
+        if om_preset_mode := self.device.status.preset:
+            return PRESET_MODES[om_preset_mode]
         return None
-
 
     # if isinstance(result, dict) and result.get("_error") is None:
     #      if temperature is not None:
@@ -251,7 +253,6 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
     # else:
     #     _LOGGER.debug("Invalid result, refreshing all")
     #     await self.coordinator.async_refresh()
-
 
     async def _update_state_from_result(
         self,

@@ -33,6 +33,11 @@ PLATFORMS = [
     Platform.SCENE,
 ]
 
+PRESET_AUTO = "auto"
+PRESET_PARTY = "party"
+PRESET_MANUAL = "manual"
+PRESET_VACATION = "vacantion"
+
 # Configuration and options
 CONF_ENABLED = "enabled"
 CONF_INSTALLATION_ID = "installation_id"
