@@ -41,11 +41,11 @@ HVAC_ACTIONS_TO_OM: dict[HVACAction, str] = {
 OM_TO_HVAC_ACTIONS = {v: k for k, v in HVAC_ACTIONS_TO_OM.items()}
 
 PRESET_MODES_TO_OM: dict[str, str] = {
-    PRESET_AUTO: "Auto",
-    PRESET_AWAY: "Away",
-    PRESET_PARTY: "Party",
-    PRESET_MANUAL: "Manual",
-    PRESET_VACATION: "Vacation",
+    PRESET_AUTO: "AUTO",
+    PRESET_AWAY: "AWAY",
+    PRESET_PARTY: "PARTY",
+    PRESET_MANUAL: "MANUAL",
+    PRESET_VACATION: "VACATION",
 }
 OM_TO_PRESET_MODES = {v: k for k, v in PRESET_MODES_TO_OM.items()}
 
@@ -249,7 +249,7 @@ class OpenMoticsThermostatUnit(OpenMoticsDevice, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
-        om_preset_mode = upperstring(PRESET_MODES_TO_OM[preset_mode])
+        om_preset_mode = PRESET_MODES_TO_OM[preset_mode]
         result = await self.coordinator.omclient.thermostats.units.set_preset(
             self.device_id,
             om_preset_mode,  # value
@@ -286,8 +286,3 @@ class OpenMoticsThermostatUnit(OpenMoticsDevice, ClimateEntity):
         else:
             _LOGGER.debug("Invalid result, refreshing all")
             await self.coordinator.async_refresh()
-
-
-def upperstring(s: str) -> str:
-    """Return the string in uppercase."""
-    return s.upper()
