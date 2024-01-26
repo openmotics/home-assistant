@@ -180,13 +180,15 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
                 self.device_id,
                 "OFF",  # value
             )
-        if hvac_mode == HVACMode.HEAT:
+        if hvac_mode in (HVACMode.HEAT, HVACMode.COOL):
             if self.hvac_mode == HVACMode.OFF:
+                _LOGGER.debug("Setting thermostat: %s", self.hvac_mode)
                 await self.coordinator.omclient.thermostats.units.set_state(
                     self.device_id,
                     "ON",  # value
                 )
-            await self.coordinator.omclient.thermostats.groups.set_mode(
+            _LOGGER.debug("Setting thermostat: %s", HVAC_MODES_INVERTED[hvac_mode])
+            await self.coordinator.omclient.thermostats.units.set_mode(
                 self.device_id,
                 HVAC_MODES_INVERTED[hvac_mode],
             )
@@ -262,4 +264,12 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
         preset_mode: str | None = None,
         other: int | None = None,
     ) -> None:
-        pass
+        if isinstance(result, dict) and result.get("_error") is None:
+            if temperature is not None:
+                self._device.status.current_temperature = temperature
+            if preset_mode is not None:
+                self._device.status.preset = PRESET_MODES_INVERTED[preset_mode]
+            self.async_write_ha_state()
+        else:
+            _LOGGER.debug("Invalid result, refreshing all")
+            await self.coordinator.async_refresh()
