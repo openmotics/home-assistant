@@ -24,30 +24,30 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-HVAC_MODES: dict[str, HVACMode] = {
-    # "auto": HVACMode.HEAT_COOL,
-    "COOLING": HVACMode.COOL,
-    # "dry": HVACMode.DRY,
-    # "fan": HVACMode.FAN_ONLY,
-    "HEATING": HVACMode.HEAT,
-    "OFF": HVACMode.OFF,
+HVAC_MODES_TO_OM: dict[HVACMode, str] = {
+    # HVACMode.HEAT_COOL: "Auto",
+    HVACMode.COOL : "Cooling" ,
+    # HVACMode.DRY : "Dry",
+    # HVACMode.FAN_ONLY : "Fan",
+    HVACMode.HEAT : "Heating",
+    HVACMode.OFF : "Off",
 }
-HVAC_MODES_INVERTED = {v: k for k, v in HVAC_MODES.items()}
+OM_TO_HVAC_MODES = {v: k for k, v in HVAC_MODES_TO_OM.items()}
 
-HVAC_ACTIONS: dict[str, HVACAction] = {
-    "COOLING": HVACAction.COOLING,
-    "HEATING": HVACAction.HEATING,
+HVAC_ACTIONS_TO_OM: dict[HVACAction, str] = {
+    HVACAction.COOLING: "Cooling",
+    HVACAction.HEATING: "Heating",
 }
-HVAC_ACTIONS_INVERTED = {v: k for k, v in HVAC_ACTIONS.items()}
+OM_TO_HVAC_ACTIONS = {v: k for k, v in HVAC_ACTIONS_TO_OM.items()}
 
-PRESET_MODES: dict[str, str] = {
-    "AUTO": PRESET_AUTO,
-    "AWAY": PRESET_AWAY,
-    "PARTY": PRESET_PARTY,
-    "MANUAL": PRESET_MANUAL,
-    "VACATION": PRESET_VACATION,
+PRESET_MODES_TO_OM: dict[str, str] = {
+    PRESET_AUTO: "Auto",
+    PRESET_AWAY: "Away",
+    PRESET_PARTY: "Party",
+    PRESET_MANUAL: "Manual",
+    PRESET_VACATION: "Vacation",
 }
-PRESET_MODES_INVERTED = {v: k for k, v in PRESET_MODES.items()}
+OM_TO_PRESET_MODES = {v: k for k, v in PRESET_MODES_TO_OM.items()}
 
 # MAP_STATE_ICONS = {
 #     HVACMode.COOL: "mdi:snowflake",
@@ -64,40 +64,80 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Lights for OpenMotics Controller."""
-    entities = []
+    tg_entities = []
+    tu_entities = []
 
     coordinator: OpenMoticsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    for gindex, om_thermostatgroup in enumerate(coordinator.data["thermostatgroups"]):
+    for tg_index, om_thermostatgroup in enumerate(coordinator.data["thermostatgroups"]):
+        tu_entities = []
         for tg_id in om_thermostatgroup.thermostat_ids:
-            for index, om_thermostat in enumerate(coordinator.data["thermostatunits"]):
+            for tu_index, om_thermostatunit in enumerate(
+                coordinator.data["thermostatunits"],
+                ):
                 # Even if the id is in the list, if the name is not set, don't add it.
                 if (
-                    om_thermostat.name is None
-                    or not om_thermostat.name
-                    or om_thermostat.name == NOT_IN_USE
+                    om_thermostatunit.name is None
+                    or not om_thermostatunit.name
+                    or om_thermostatunit.name == NOT_IN_USE
                 ):
                     continue
 
-                if tg_id == om_thermostat.idx:
-                    entities.append(
-                        OpenMoticsClimate(
+                if tg_id == om_thermostatunit.idx:
+                    tu_entities.append(
+                        OpenMoticsThermostatUnit(
                             coordinator,
-                            index,
-                            om_thermostat,
-                            gindex,
+                            tu_index,
+                            om_thermostatunit,
+                            om_thermostatgroup,
+                        ),
+                    )
+            if tu_entities:
+                if (
+                    om_thermostatgroup.name is None
+                    or not om_thermostatgroup.name
+                ):
+                    # If name is empty but there thermostatunits, generate a name
+                    om_thermostatgroup.name = f"Thermostatgroup-{tg_index}"
+
+                tg_entities.append(
+                        OpenMoticsThermostatGroup(
+                            coordinator,
+                            tg_index,
                             om_thermostatgroup,
                         ),
                     )
 
-    if not entities:
+
+    if not tg_entities and not tu_entities:
         _LOGGER.info("No OpenMotics Thermostats added")
         return
 
-    async_add_entities(entities)
+    async_add_entities(tg_entities)
+    async_add_entities(tu_entities)
+
+class OpenMoticsThermostatGroup(OpenMoticsDevice, ClimateEntity):
+    """Representation of a OpenMotics switch."""
+
+    coordinator: OpenMoticsDataUpdateCoordinator
+
+    _attr_supported_features = (
+        ClimateEntityFeature.PRESET_MODE
+    )
+
+    def __init__(
+        self,
+        coordinator: OpenMoticsDataUpdateCoordinator,
+        index: int,
+        om_thermostatgroup: dict[str, Any],
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(coordinator, index, om_thermostatgroup, "climate")
+
+        self._device = self.coordinator.data["thermostatgroups"][self.index]
 
 
-class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
+class OpenMoticsThermostatUnit(OpenMoticsDevice, ClimateEntity):
     """Representation of a OpenMotics switch."""
 
     coordinator: OpenMoticsDataUpdateCoordinator
@@ -118,15 +158,12 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
         coordinator: OpenMoticsDataUpdateCoordinator,
         index: int,
         om_thermostat: dict[str, Any],
-        gindex: int,
         om_thermostatgroup: dict[str, Any],
     ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator, index, om_thermostat, "climate")
 
         self._device = self.coordinator.data["thermostatunits"][self.index]
-
-        self.group_index = gindex
 
         self._attr_hvac_modes = [HVACMode.OFF]
         if "HEATING" in om_thermostatgroup.capabilities:
@@ -135,7 +172,7 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
             self._attr_hvac_modes.append(HVACMode.COOL)
 
         # Preset modes
-        self._attr_preset_modes = list(PRESET_MODES.keys())
+        self._attr_preset_modes = list(PRESET_MODES_TO_OM.keys())
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -148,7 +185,7 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
         # if self.device.status.mode == "COOLING":
         #     return HVACMode.COOL
         if state := self.device.status.mode:
-            return HVAC_MODES[state]
+            return OM_TO_HVAC_MODES[state]
 
         return HVACMode.OFF
 
@@ -159,37 +196,25 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
             self.device_id,
             hvac_mode,
         )
-        # if hvac_mode == HVACMode.ON:
-        #     await self.coordinator.omclient.thermostats.units.set_state(
-        #         self.device_id,
-        #         "ON",  # value
-        #     )
-        #     return
         if hvac_mode == HVACMode.OFF:
             result = await self.coordinator.omclient.thermostats.units.set_state(
                 self.device_id,
                 "OFF",  # value
             )
-
-        if hvac_mode in (HVACMode.HEAT, HVACMode.COOL):
-            if self.hvac_mode == HVACMode.OFF:
-                _LOGGER.debug("Setting thermostat: %s", self.hvac_mode)
-                result = await self.coordinator.omclient.thermostats.units.set_state(
+        else:
+            # heating/cooling is set on Thermostatgroup level, here we can only
+            # turn it on/off
+            result = await self.coordinator.omclient.thermostats.units.set_state(
                     self.device_id,
                     "ON",  # value
                 )
-            # _LOGGER.debug("Setting thermostat: %s", HVAC_MODES_INVERTED[hvac_mode])
-            # await self.coordinator.omclient.thermostats.units.set_mode(
-            #     self.device_id,
-            #     HVAC_MODES_INVERTED[hvac_mode],
-            # )
         await self._update_state_from_result(result, hvac_mode=hvac_mode)
 
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
         if current_action := self.device.status.mode:
-            return HVAC_ACTIONS[current_action]
+            return OM_TO_HVAC_ACTIONS[current_action]
 
         return None
 
@@ -197,8 +222,6 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
     def current_temperature(self) -> int:
         """Return current temperature."""
         return self.device.status.current_temperature
-
-        # return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -225,7 +248,7 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
-        om_preset_mode = PRESET_MODES_INVERTED[preset_mode]
+        om_preset_mode = upperstring(PRESET_MODES_TO_OM[preset_mode])
         result = await self.coordinator.omclient.thermostats.units.set_preset(
             self.device_id,
             om_preset_mode,  # value
@@ -236,16 +259,8 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if om_preset_mode := self.device.status.preset:
-            return PRESET_MODES[om_preset_mode]
+            return OM_TO_PRESET_MODES[om_preset_mode]
         return None
-
-    # if isinstance(result, dict) and result.get("_error") is None:
-    #      if temperature is not None:
-    #         self._device.status.position = position
-    #     self.async_write_ha_state()
-    # else:
-    #     _LOGGER.debug("Invalid result, refreshing all")
-    #     await self.coordinator.async_refresh()
 
     async def _update_state_from_result(
         self,
@@ -259,14 +274,18 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
             if temperature is not None:
                 self._device.status.current_temperature = temperature
             if preset_mode is not None:
-                self._device.status.preset = PRESET_MODES_INVERTED[preset_mode]
+                self._device.status.preset = PRESET_MODES_TO_OM[preset_mode]
             if hvac_mode is not None:
                 if hvac_mode == HVACMode.OFF:
                     self._device.status.state = "OFF"
                 else:
                     self._device.status.state = "ON"
-                    self._device.status.mode = PRESET_MODES_INVERTED[preset_mode]
+                    # self._device.status.mode = PRESET_MODES_INVERTED[preset_mode]
             self.async_write_ha_state()
         else:
             _LOGGER.debug("Invalid result, refreshing all")
             await self.coordinator.async_refresh()
+
+def upperstring(s: str) -> str:
+        """Return the string in uppercase."""
+        return s.upper()
