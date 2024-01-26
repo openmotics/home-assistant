@@ -4,25 +4,15 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    PRESET_AWAY,
-    ClimateEntity,
-    ClimateEntityFeature,
-    HVACAction,
-    HVACMode,
-)
+from homeassistant.components.climate import (ATTR_HVAC_MODE, PRESET_AWAY,
+                                              ClimateEntity,
+                                              ClimateEntityFeature, HVACAction,
+                                              HVACMode)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
-from .const import (
-    DOMAIN,
-    NOT_IN_USE,
-    PRESET_AUTO,
-    PRESET_MANUAL,
-    PRESET_PARTY,
-    PRESET_VACATION,
-)
+from .const import (DOMAIN, NOT_IN_USE, PRESET_AUTO, PRESET_MANUAL,
+                    PRESET_PARTY, PRESET_VACATION)
 from .entity import OpenMoticsDevice
 
 if TYPE_CHECKING:
@@ -176,10 +166,11 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
         #     )
         #     return
         if hvac_mode == HVACMode.OFF:
-            await self.coordinator.omclient.thermostats.units.set_state(
+            result = await self.coordinator.omclient.thermostats.units.set_state(
                 self.device_id,
                 "OFF",  # value
             )
+            await self._update_state_from_result(result, temperature=temperature)
         if hvac_mode in (HVACMode.HEAT, HVACMode.COOL):
             if self.hvac_mode == HVACMode.OFF:
                 _LOGGER.debug("Setting thermostat: %s", self.hvac_mode)
@@ -262,13 +253,19 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
         *,
         temperature: float | None = None,
         preset_mode: str | None = None,
-        other: int | None = None,
+        hvac_mode: str | None = None,
     ) -> None:
         if isinstance(result, dict) and result.get("_error") is None:
             if temperature is not None:
                 self._device.status.current_temperature = temperature
             if preset_mode is not None:
                 self._device.status.preset = PRESET_MODES_INVERTED[preset_mode]
+            if hvac_mode is not None:
+                if hvac_mode == HVACMode.OFF:
+                    self._device.status.state = "OFF"
+                else:
+                    self._device.status.state = "ON"
+                    self._device.status.mode = PRESET_MODES_INVERTED[preset_mode]
             self.async_write_ha_state()
         else:
             _LOGGER.debug("Invalid result, refreshing all")
