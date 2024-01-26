@@ -4,15 +4,25 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.climate import (ATTR_HVAC_MODE, PRESET_AWAY,
-                                              ClimateEntity,
-                                              ClimateEntityFeature, HVACAction,
-                                              HVACMode)
+from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
+    PRESET_AWAY,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
-from .const import (DOMAIN, NOT_IN_USE, PRESET_AUTO, PRESET_MANUAL,
-                    PRESET_PARTY, PRESET_VACATION)
+from .const import (
+    DOMAIN,
+    NOT_IN_USE,
+    PRESET_AUTO,
+    PRESET_MANUAL,
+    PRESET_PARTY,
+    PRESET_VACATION,
+)
 from .entity import OpenMoticsDevice
 
 if TYPE_CHECKING:
@@ -26,17 +36,17 @@ _LOGGER = logging.getLogger(__name__)
 
 HVAC_MODES_TO_OM: dict[HVACMode, str] = {
     # HVACMode.HEAT_COOL: "Auto",
-    HVACMode.COOL : "Cooling" ,
+    HVACMode.COOL: "COOLING",
     # HVACMode.DRY : "Dry",
     # HVACMode.FAN_ONLY : "Fan",
-    HVACMode.HEAT : "Heating",
-    HVACMode.OFF : "Off",
+    HVACMode.HEAT: "HEATING",
+    HVACMode.OFF: "OFF",
 }
 OM_TO_HVAC_MODES = {v: k for k, v in HVAC_MODES_TO_OM.items()}
 
 HVAC_ACTIONS_TO_OM: dict[HVACAction, str] = {
-    HVACAction.COOLING: "Cooling",
-    HVACAction.HEATING: "Heating",
+    HVACAction.COOLING: "COOLING",
+    HVACAction.HEATING: "HEATING",
 }
 OM_TO_HVAC_ACTIONS = {v: k for k, v in HVAC_ACTIONS_TO_OM.items()}
 
@@ -74,7 +84,7 @@ async def async_setup_entry(
         for tg_id in om_thermostatgroup.thermostat_ids:
             for tu_index, om_thermostatunit in enumerate(
                 coordinator.data["thermostatunits"],
-                ):
+            ):
                 # Even if the id is in the list, if the name is not set, don't add it.
                 if (
                     om_thermostatunit.name is None
@@ -93,21 +103,17 @@ async def async_setup_entry(
                         ),
                     )
             if tu_entities:
-                if (
-                    om_thermostatgroup.name is None
-                    or not om_thermostatgroup.name
-                ):
+                if om_thermostatgroup.name is None or not om_thermostatgroup.name:
                     # If name is empty but there thermostatunits, generate a name
                     om_thermostatgroup.name = f"Thermostatgroup-{tg_index}"
 
                 tg_entities.append(
-                        OpenMoticsThermostatGroup(
-                            coordinator,
-                            tg_index,
-                            om_thermostatgroup,
-                        ),
-                    )
-
+                    OpenMoticsThermostatGroup(
+                        coordinator,
+                        tg_index,
+                        om_thermostatgroup,
+                    ),
+                )
 
     if not tg_entities and not tu_entities:
         _LOGGER.info("No OpenMotics Thermostats added")
@@ -116,14 +122,13 @@ async def async_setup_entry(
     async_add_entities(tg_entities)
     async_add_entities(tu_entities)
 
+
 class OpenMoticsThermostatGroup(OpenMoticsDevice, ClimateEntity):
     """Representation of a OpenMotics switch."""
 
     coordinator: OpenMoticsDataUpdateCoordinator
 
-    _attr_supported_features = (
-        ClimateEntityFeature.PRESET_MODE
-    )
+    _attr_supported_features = ClimateEntityFeature.PRESET_MODE
 
     def __init__(
         self,
@@ -205,9 +210,9 @@ class OpenMoticsThermostatUnit(OpenMoticsDevice, ClimateEntity):
             # heating/cooling is set on Thermostatgroup level, here we can only
             # turn it on/off
             result = await self.coordinator.omclient.thermostats.units.set_state(
-                    self.device_id,
-                    "ON",  # value
-                )
+                self.device_id,
+                "ON",  # value
+            )
         await self._update_state_from_result(result, hvac_mode=hvac_mode)
 
     @property
@@ -286,6 +291,7 @@ class OpenMoticsThermostatUnit(OpenMoticsDevice, ClimateEntity):
             _LOGGER.debug("Invalid result, refreshing all")
             await self.coordinator.async_refresh()
 
+
 def upperstring(s: str) -> str:
-        """Return the string in uppercase."""
-        return s.upper()
+    """Return the string in uppercase."""
+    return s.upper()
