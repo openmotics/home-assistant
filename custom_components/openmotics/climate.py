@@ -92,7 +92,7 @@ async def async_setup_entry(
                             om_thermostatgroup,
                         ),
                     )
-            if tu_entities:
+        if tu_entities:
                 if om_thermostatgroup.name is None or not om_thermostatgroup.name:
                     # If name is empty but there thermostatunits, generate a name
                     om_thermostatgroup.name = f"Thermostatgroup-{tg_index}"
@@ -119,7 +119,7 @@ class OpenMoticsThermostatGroup(OpenMoticsDevice, ClimateEntity):
     coordinator: OpenMoticsDataUpdateCoordinator
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_supported_features = ClimateEntityFeature.PRESET_MODE
+    # _attr_supported_features = ClimateEntityFeature.HVAC_MODE
 
     def __init__(
         self,
@@ -137,6 +137,12 @@ class OpenMoticsThermostatGroup(OpenMoticsDevice, ClimateEntity):
             self._attr_hvac_modes.append(HVACMode.HEAT)
         if "COOLING" in om_thermostatgroup.capabilities:
             self._attr_hvac_modes.append(HVACMode.COOL)
+
+    @property
+    def hvac_mode(self) -> HVACMode:
+        """Return hvac operation ie. heat, cool mode."""
+        return OM_TO_HVAC_MODES[self.device.status.mode]
+
 
 class OpenMoticsThermostatUnit(OpenMoticsDevice, ClimateEntity):
     """Representation of a OpenMotics switch."""
@@ -178,14 +184,15 @@ class OpenMoticsThermostatUnit(OpenMoticsDevice, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
-        if self.device.status.state == "OFF":
+        self._device = self.coordinator.data["thermostatunits"][self.index]
+        if self._device.status.state == "OFF":
             return HVACMode.OFF
 
         # if self.device.status.mode == "HEATING":
         #     return HVACMode.HEAT
         # if self.device.status.mode == "COOLING":
         #     return HVACMode.COOL
-        if state := self.device.status.mode:
+        if state := self._device.status.mode:
             return OM_TO_HVAC_MODES[state]
 
         return HVACMode.OFF
@@ -214,15 +221,16 @@ class OpenMoticsThermostatUnit(OpenMoticsDevice, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
-        if current_action := self.device.status.mode:
-            return OM_TO_HVAC_ACTIONS[current_action]
-
-        return None
+        try:
+            self._device = self.coordinator.data["thermostatunits"][self.index]
+            return OM_TO_HVAC_ACTIONS[self._device.status.mode]
+        except (AttributeError, KeyError):
+            return None
 
     @property
-    def current_temperature(self) -> int:
+    def current_temperature(self) -> float:
         """Return current temperature."""
-        return self.device.status.current_temperature
+        return self._device.status.current_temperature
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -231,6 +239,7 @@ class OpenMoticsThermostatUnit(OpenMoticsDevice, ClimateEntity):
 
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
+
         _LOGGER.debug(
             "Setting thermostat: %s to temperature %s",
             self.device_id,
@@ -245,23 +254,29 @@ class OpenMoticsThermostatUnit(OpenMoticsDevice, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self.device.status.setpoint
+        try:
+            self._device = self.coordinator.data["thermostatunits"][self.index]
+            return self._device.status.current_setpoint
+        except (AttributeError, KeyError):
+            return None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         om_preset_mode = PRESET_MODES_TO_OM[preset_mode]
         result = await self.coordinator.omclient.thermostats.units.set_preset(
             self.device_id,
-            om_preset_mode,  # value
+            om_preset_mode,
         )
         await self._update_state_from_result(result, preset_mode=om_preset_mode)
 
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        if om_preset_mode := self.device.status.preset:
-            return OM_TO_PRESET_MODES[om_preset_mode]
-        return None
+        try:
+            self._device = self.coordinator.data["thermostatunits"][self.index]
+            return OM_TO_PRESET_MODES[self.device.status.active_preset]
+        except (AttributeError, KeyError):
+            return None
 
     async def _update_state_from_result(
         self,
