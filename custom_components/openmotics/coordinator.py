@@ -56,6 +56,8 @@ class OpenMoticsDataUpdateCoordinator(DataUpdateCoordinator):
             my_groupactions = await self._omclient.groupactions.get_all()
             my_shutters = await self._omclient.shutters.get_all()
             my_sensors = await self._omclient.sensors.get_all()
+            my_thermostatgroups = await self._omclient.thermostats.groups.get_all()
+            my_thermostatunits = await self._omclient.thermostats.units.get_all()
             if hasattr(self._omclient, "energysensors"):
                 my_energysensors = await self._omclient.energysensors.get_all()
             else:
@@ -71,6 +73,8 @@ class OpenMoticsDataUpdateCoordinator(DataUpdateCoordinator):
                 "shutters": [],
                 "sensors": [],
                 "energysensors": [],
+                "thermostatgroups": [],
+                "thermostatunits": [],
             }
         # Store data in a way Home Assistant can easily consume it
         return {
@@ -80,6 +84,8 @@ class OpenMoticsDataUpdateCoordinator(DataUpdateCoordinator):
             "shutters": my_shutters,
             "sensors": my_sensors,
             "energysensors": my_energysensors,
+            "thermostatgroups": my_thermostatgroups,
+            "thermostatunits": my_thermostatunits,
         }
 
     @property

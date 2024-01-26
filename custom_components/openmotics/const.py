@@ -24,13 +24,19 @@ ENV_LOCAL = "local"
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 PLATFORMS = [
-    # Platform.BINARY_SENSOR,
+    # Platform.BINARY_SENSORa
+    Platform.CLIMATE,
     Platform.SWITCH,
     Platform.COVER,
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SCENE,
 ]
+
+PRESET_AUTO = "auto"
+PRESET_PARTY = "party"
+PRESET_MANUAL = "manual"
+PRESET_VACATION = "vacantion"
 
 # Configuration and options
 CONF_ENABLED = "enabled"
