@@ -170,20 +170,20 @@ class OpenMoticsClimate(OpenMoticsDevice, ClimateEntity):
                 self.device_id,
                 "OFF",  # value
             )
-            await self._update_state_from_result(result, temperature=temperature)
+
         if hvac_mode in (HVACMode.HEAT, HVACMode.COOL):
             if self.hvac_mode == HVACMode.OFF:
                 _LOGGER.debug("Setting thermostat: %s", self.hvac_mode)
-                await self.coordinator.omclient.thermostats.units.set_state(
+                result = await self.coordinator.omclient.thermostats.units.set_state(
                     self.device_id,
                     "ON",  # value
                 )
-            _LOGGER.debug("Setting thermostat: %s", HVAC_MODES_INVERTED[hvac_mode])
-            await self.coordinator.omclient.thermostats.units.set_mode(
-                self.device_id,
-                HVAC_MODES_INVERTED[hvac_mode],
-            )
-            return
+            # _LOGGER.debug("Setting thermostat: %s", HVAC_MODES_INVERTED[hvac_mode])
+            # await self.coordinator.omclient.thermostats.units.set_mode(
+            #     self.device_id,
+            #     HVAC_MODES_INVERTED[hvac_mode],
+            # )
+        await self._update_state_from_result(result, hvac_mode=hvac_mode)
 
     @property
     def hvac_action(self) -> HVACAction | None:
