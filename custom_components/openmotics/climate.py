@@ -93,17 +93,17 @@ async def async_setup_entry(
                         ),
                     )
         if tu_entities:
-                if om_thermostatgroup.name is None or not om_thermostatgroup.name:
-                    # If name is empty but there thermostatunits, generate a name
-                    om_thermostatgroup.name = f"Thermostatgroup-{tg_index}"
+            if om_thermostatgroup.name is None or not om_thermostatgroup.name:
+                # If name is empty but there thermostatunits, generate a name
+                om_thermostatgroup.name = f"Thermostatgroup-{tg_index}"
 
-                tg_entities.append(
-                    OpenMoticsThermostatGroup(
-                        coordinator,
-                        tg_index,
-                        om_thermostatgroup,
-                    ),
-                )
+            tg_entities.append(
+                OpenMoticsThermostatGroup(
+                    coordinator,
+                    tg_index,
+                    om_thermostatgroup,
+                ),
+            )
 
     if not tg_entities and not tu_entities:
         _LOGGER.info("No OpenMotics Thermostats added")
@@ -249,7 +249,7 @@ class OpenMoticsThermostatUnit(OpenMoticsDevice, ClimateEntity):
             self.device_id,
             temperature,  # value
         )
-        await self._update_state_from_result(result, temperature=temperature)
+        await self._update_state_from_result(result, setpoint=temperature)
 
     @property
     def target_temperature(self) -> float | None:
@@ -262,12 +262,18 @@ class OpenMoticsThermostatUnit(OpenMoticsDevice, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
+        # om_preset_mode = PRESET_MODES_TO_OM[preset_mode]
         om_preset_mode = PRESET_MODES_TO_OM[preset_mode]
+        _LOGGER.debug(
+            "Setting thermostat: %s to preset %s",
+            self.device_id,
+            om_preset_mode,
+        )
         result = await self.coordinator.omclient.thermostats.units.set_preset(
             self.device_id,
             om_preset_mode,
         )
-        await self._update_state_from_result(result, preset_mode=om_preset_mode)
+        await self._update_state_from_result(result, om_preset_mode=om_preset_mode)
 
     @property
     def preset_mode(self) -> str | None:
@@ -282,15 +288,15 @@ class OpenMoticsThermostatUnit(OpenMoticsDevice, ClimateEntity):
         self,
         result: Any,
         *,
-        temperature: float | None = None,
-        preset_mode: str | None = None,
+        setpoint: float | None = None,
+        om_preset_mode: str | None = None,
         hvac_mode: str | None = None,
     ) -> None:
         if isinstance(result, dict) and result.get("_error") is None:
-            if temperature is not None:
-                self._device.status.current_temperature = temperature
-            if preset_mode is not None:
-                self._device.status.preset = PRESET_MODES_TO_OM[preset_mode]
+            if setpoint is not None:
+                self._device.status.current_setpoint = setpoint
+            if om_preset_mode is not None:
+                self._device.status.active_preset = om_preset_mode
             if hvac_mode is not None:
                 if hvac_mode == HVACMode.OFF:
                     self._device.status.state = "OFF"
