@@ -4,25 +4,15 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    PRESET_AWAY,
-    ClimateEntity,
-    ClimateEntityFeature,
-    HVACAction,
-    HVACMode,
-)
+from homeassistant.components.climate import (ATTR_HVAC_MODE, PRESET_AWAY,
+                                              ClimateEntity,
+                                              ClimateEntityFeature, HVACAction,
+                                              HVACMode)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
-from .const import (
-    DOMAIN,
-    NOT_IN_USE,
-    PRESET_AUTO,
-    PRESET_MANUAL,
-    PRESET_PARTY,
-    PRESET_VACATION,
-)
+from .const import (DOMAIN, NOT_IN_USE, PRESET_AUTO, PRESET_MANUAL,
+                    PRESET_PARTY, PRESET_VACATION)
 from .entity import OpenMoticsDevice
 
 if TYPE_CHECKING:
@@ -128,6 +118,7 @@ class OpenMoticsThermostatGroup(OpenMoticsDevice, ClimateEntity):
 
     coordinator: OpenMoticsDataUpdateCoordinator
 
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = ClimateEntityFeature.PRESET_MODE
 
     def __init__(
@@ -141,6 +132,11 @@ class OpenMoticsThermostatGroup(OpenMoticsDevice, ClimateEntity):
 
         self._device = self.coordinator.data["thermostatgroups"][self.index]
 
+        self._attr_hvac_modes = [HVACMode.OFF]
+        if "HEATING" in om_thermostatgroup.capabilities:
+            self._attr_hvac_modes.append(HVACMode.HEAT)
+        if "COOLING" in om_thermostatgroup.capabilities:
+            self._attr_hvac_modes.append(HVACMode.COOL)
 
 class OpenMoticsThermostatUnit(OpenMoticsDevice, ClimateEntity):
     """Representation of a OpenMotics switch."""
