@@ -169,7 +169,7 @@ class OpenMoticsEnergySensor(OpenMoticsSensor):
             coordinator,
             index,
             OpenMoticsEnergySensor.WrappedDevice(
-                f"energy-{device.idx}-{self._device_class}",
+                f"energy-{device.idx}-{self._attr_device_class}",
                 device.idx,
                 device.name,
                 device,
