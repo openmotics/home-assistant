@@ -155,7 +155,7 @@ class OpenMoticsEnergySensor(OpenMoticsSensor):
         device: dict[str, Any]
 
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _device_class: SensorDeviceClass
+    _attr_device_class: SensorDeviceClass
 
     def __init__(
         self,
